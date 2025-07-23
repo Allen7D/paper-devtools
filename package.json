@@ -5,13 +5,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "dev": "pnpm --filter extension dev",
+    "build": "pnpm --filter extension build",
+    "preview": "pnpm --filter extension preview",
+    "dev:all": "pnpm -r --parallel dev",
+    "build:all": "pnpm -r build"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.3",
@@ -23,5 +21,9 @@
     "typescript": "~5.8.3",
     "vite": "^7.0.5",
     "vite-plugin-zip-pack": "^1.2.4"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

@@ -43,6 +43,8 @@ importers:
         specifier: ^1.2.4
         version: 1.2.4(vite@7.0.5(@types/node@24.1.0))
 
+  packages/extension: {}
+
 packages:
 
   '@ampproject/remapping@2.3.0':
