@@ -1,0 +1,121 @@
+.properties-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.properties-header {
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 10px;
+}
+
+.properties-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.properties-content {
+  flex: 1;
+  overflow: auto;
+}
+
+.no-selection {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.node-info {
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.info-item {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.info-label {
+  font-weight: bold;
+  width: 60px;
+}
+
+.properties-list {
+  margin-top: 15px;
+}
+
+.properties-list h4 {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.property-editor {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.property-name {
+  width: 120px;
+  font-weight: 500;
+  color: #333;
+}
+
+.property-value {
+  flex: 1;
+}
+
+.display-value {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.display-value:hover {
+  background-color: #f0f0f0;
+}
+
+.edit-controls {
+  display: flex;
+  align-items: center;
+}
+
+.edit-controls input {
+  flex: 1;
+  padding: 4px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.edit-actions {
+  display: flex;
+  margin-left: 5px;
+}
+
+.edit-actions button {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-left: 3px;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-actions button:first-child {
+  color: green;
+}
+
+.edit-actions button:last-child {
+  color: red;
+} 

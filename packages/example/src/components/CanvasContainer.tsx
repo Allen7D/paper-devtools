@@ -20,6 +20,10 @@ const CanvasContainer: React.FC = () => {
 	const toolManagerRef = useRef<ToolManager | null>(null);
 	const [activeToolType, setActiveToolType] = useState<ToolType>(ToolType.SELECT);
 
+	useEffect(() => {
+		window.paper = paper;
+	}, []);
+
 	// 初始化Paper.js和工具
 	useEffect(() => {
 		if (canvasRef.current) {

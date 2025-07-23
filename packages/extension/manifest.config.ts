@@ -14,8 +14,23 @@ export default defineManifest({
     },
     default_popup: 'src/popup/index.html',
   },
-  content_scripts: [{
-    js: ['src/content/main.tsx'],
-    matches: ['https://*/*'],
-  }],
+  devtools_page: 'src/devtools/index.html',
+  content_scripts: [
+    {
+      matches: ["http://*/*", "https://*/*", "<all_urls>"],
+      js: ['src/content/index.ts'],
+      run_at: 'document_end'
+    }
+  ],
+  background: {
+    service_worker: 'src/background/index.js',
+    type: 'module'
+  },
+  permissions: ['storage', 'activeTab', 'scripting'],
+  web_accessible_resources: [
+    {
+      resources: ['paper-detection.js'],
+      matches: ['<all_urls>']
+    }
+  ]
 })
