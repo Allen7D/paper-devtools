@@ -17,6 +17,18 @@ export default defineConfig({
     crx({ manifest }),
     zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` }),
   ],
+  css: {
+    preprocessorOptions: {
+      less: {
+        javascriptEnabled: true,
+        // 可选：自定义 antd 主题
+        modifyVars: {
+          // '@primary-color': '#1890ff',
+          // 主题变量...
+        },
+      },
+    },
+  },
   server: {
     cors: {
       origin: [
