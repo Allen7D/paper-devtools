@@ -1,36 +1,54 @@
-import { useState } from 'react'
-import { Button } from 'antd'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.less'
+import React, { useState, useEffect } from 'react';
+import { Layout, ConfigProvider, theme } from 'antd';
+import Header from '@/components/Header';
+import CanvasContainer from '@/components/CanvasContainer';
+import ControlPanel from '@/components/ControlPanel';
+import Footer from '@/components/Footer';
+import { PaperContext } from '@/context/PaperContext';
+import { initPaper } from '@/utils/paperSetup';
 
-function App() {
-  const [count, setCount] = useState(0)
+import './style.less';
+
+const { Content } = Layout;
+
+const App: React.FC = () => {
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  
+  useEffect(() => {
+    // 初始化 Paper.js 并暴露给 DevTools
+    const paperObj = initPaper();
+    
+    return () => {
+      // 清理资源
+      if (paperObj?.project) {
+        paperObj.project.clear();
+      }
+    };
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <Button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </Button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <ConfigProvider
+      theme={{
+        algorithm: theme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#4285F4',
+        },
+      }}
+    >
+      <PaperContext.Provider value={{ selectedItem, setSelectedItem }}>
+        <Layout className="app">
+          <Header />
+          <Content className="main-content">
+            <div className="main-container">
+              <CanvasContainer />
+              <ControlPanel />
+            </div>
+          </Content>
+          <Footer />
+        </Layout>
+      </PaperContext.Provider>
+    </ConfigProvider>
+  );
+};
 
-export default App
+export default App; 
