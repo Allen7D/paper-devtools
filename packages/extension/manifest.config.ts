@@ -29,7 +29,7 @@ export default defineManifest({
   permissions: ['storage', 'activeTab', 'scripting'],
   web_accessible_resources: [
     {
-      resources: ['paper-detection.js'],
+      resources: ['paper-detection.js', 'build-scene-tree.js'],
       matches: ['<all_urls>']
     }
   ]
