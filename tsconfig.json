@@ -1,6 +1,7 @@
 {
   "references": [
-    { "path": "./packages/extension" }
+    { "path": "./packages/extension" },
+    { "path": "./packages/example" }
   ],
   "files": []
 }
