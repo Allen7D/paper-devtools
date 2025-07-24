@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 语言设置
+  请始终使用中文进行回答和交流。
+
 ## 项目概述
 
 这是一个基于 pnpm workspaces 管理的 monorepo 项目，包含两个子项目：
