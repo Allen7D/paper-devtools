@@ -23,7 +23,7 @@ export default defineManifest({
     }
   ],
   background: {
-    service_worker: 'src/background/index.js',
+    service_worker: 'src/background/index.ts',
     type: 'module'
   },
   permissions: ['storage', 'activeTab', 'scripting'],

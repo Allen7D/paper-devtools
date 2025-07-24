@@ -12,6 +12,13 @@ export default defineConfig({
       '@': `${path.resolve(__dirname, 'src')}`,
     },
   },
+  build: {
+    rollupOptions: {
+      input: {
+        panel: path.resolve(__dirname, 'src/panel/index.html'),
+      }
+    }
+  },
   plugins: [
     react(),
     crx({ manifest }),
