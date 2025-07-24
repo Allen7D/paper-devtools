@@ -1,4 +1,4 @@
-// 注入检测脚本
+// 会往每个页面，注入检测脚本
 function injectDetectionScript() {
   const script = document.createElement('script');
   script.src = chrome.runtime.getURL('paper-detection.js');
@@ -31,12 +31,14 @@ window.addEventListener('PAPER_JS_DETECTED', () => {
   console.log('Paper.js 已检测到');
   paperJsDetected = true;
   
-  // 注入场景树脚本
+  // 识别到 Paper.js 后，注入场景树脚本
   injectSceneTreeScript();
 });
 
 // 处理来自 DevTools 的消息
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  console.log('>>> message', message);
+
   if (!message || !message.action) return;
   
   switch (message.action) {

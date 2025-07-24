@@ -1,5 +1,5 @@
 import React from 'react';
-import { EyeOutlined, EyeInvisibleOutlined, CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons';
+import { EyeOutlined, EyeInvisibleOutlined, CaretRightOutlined } from '@ant-design/icons';
 import { usePaperStore, PaperNode } from '../store';
 
 import './TreeNode.less';

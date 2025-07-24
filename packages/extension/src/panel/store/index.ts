@@ -45,7 +45,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
         if (chrome.runtime.lastError) {
           set({ 
             connected: false, 
-            connectionStatus: '无法连接: ' + chrome.runtime.lastError.message 
+            connectionStatus: '无法连接, 错误信息(' + chrome.runtime.lastError.message + ')'
           });
           return;
         }
