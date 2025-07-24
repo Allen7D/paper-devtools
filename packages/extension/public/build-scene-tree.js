@@ -1,6 +1,5 @@
 // 递归构建场景树
 function buildSceneTree(item, id = '') {
-	console.log('buildSceneTree', item, id);
 	if (!item) return null;
 
 	// 为每个节点生成唯一 ID
@@ -66,12 +65,7 @@ function buildSceneTree(item, id = '') {
 	// 处理子项 - 根据对象类型获取子项
 	let children = null;
 	if (isProject) {
-		// Project 对象：使用 activeLayer 或第一个 layer
-		if (item.activeLayer) {
-			children = [item.activeLayer];
-		} else if (item.layers && item.layers.length > 0) {
-			children = item.layers;
-		}
+		children = item.layers;
 	} else {
 		// 普通 Item 对象：使用 children 属性
 		children = item.children;
@@ -116,12 +110,8 @@ function findPaperItemById(id) {
 		// 根据当前对象类型获取子项
 		const isProject = current.className === 'Project' || (current.activeLayer && current.layers);
 		if (isProject) {
-			// Project 对象：使用 activeLayer 或 layers
-			if (current.activeLayer) {
-				children = [current.activeLayer];
-			} else if (current.layers && current.layers.length > 0) {
-				children = current.layers;
-			}
+			// Project 对象：使用所有 layers
+			children = current.layers;
 		} else {
 			// 普通 Item 对象：使用 children 属性
 			children = current.children;
