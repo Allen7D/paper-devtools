@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   paper.setup(canvas);
   
   // 将 paper 实例暴露到全局，以便 DevTools 扩展访问
-  (window as any).paper = paper;
+  (window as any).__PAPER_JS__ = paper;
   
   // 创建多层示例图形
   createShapes();
