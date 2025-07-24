@@ -150,6 +150,7 @@ window.addEventListener('PAPER_DEVTOOLS_MESSAGE', function (event) {
 						item.selected = true;
 					}
 					// 构建节点信息
+					console.log('Click:', item);
 					const node = buildSceneTree(item, message.nodeId);
 					response = { node };
 				}
