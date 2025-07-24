@@ -1,5 +1,15 @@
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';
+import ReactDOM from "react-dom/client";
+import { ConfigProvider, theme } from "antd";
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<App />); 
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <ConfigProvider
+    theme={{
+      algorithm: theme.compactAlgorithm,
+    }}
+  >
+    <App />
+  </ConfigProvider>
+);

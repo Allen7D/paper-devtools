@@ -1,6 +1,10 @@
 import React, { useEffect } from 'react';
+import { EyeOutlined, EyeInvisibleOutlined, CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons';
+
 import { usePaperStore, PaperNode } from '../store';
-import './SceneTreeView.css';
+
+import './SceneTreeView.less';
+import { Button } from 'antd';
 
 interface TreeNodeProps {
   node: PaperNode;
@@ -42,14 +46,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, level }) => {
       >
         {node.children.length > 0 && (
           <span className="expand-icon" onClick={handleToggleExpand}>
-            {isExpanded ? '▼' : '►'}
+            {isExpanded ? <CaretDownOutlined /> : <CaretRightOutlined />}
           </span>
         )}
         <span 
           className="visibility-icon" 
           onClick={handleToggleVisibility}
         >
-          {node.visible ? '👁️' : '👁️‍🗨️'}
+          {node.visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
         </span>
         <span className="node-type">{node.type}</span>
         <span className="node-name">{node.name || '<无名称>'}</span>
@@ -88,8 +92,8 @@ export const SceneTreeView: React.FC = () => {
   return (
     <div className="scene-tree-container">
       <div className="scene-tree-header">
-        <h3>场景树</h3>
-        <button onClick={refreshSceneTree}>刷新</button>
+        <h5>场景树</h5>
+        <Button onClick={refreshSceneTree}>刷新</Button>
       </div>
       <div className="scene-tree-content">
         <TreeNode node={sceneTree} level={0} />
