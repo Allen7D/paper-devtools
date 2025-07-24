@@ -10,21 +10,23 @@ document.addEventListener('DOMContentLoaded', () => {
   canvas.style.margin = '20px auto';
   canvas.width = 800;
   canvas.height = 600;
+
+  const paperScope = new paper.PaperScope();
   
   // 添加画布到页面
   document.body.appendChild(canvas);
   
   // 初始化 Paper.js
-  paper.setup(canvas);
+  paperScope.setup(canvas);
   
   // 将 paper 实例暴露到全局，以便 DevTools 扩展访问
-  (window as any).__PAPER_JS__ = paper;
+  (window as any).__PAPER_JS__ = paperScope;
   
   // 创建多层示例图形
-  createShapes();
+  createShapes(paperScope);
 });
 
-function createShapes() {
+function createShapes(paper: paper.PaperScope) {
   // 创建背景 (放在默认图层)
   paper.project.activeLayer.name = 'Default Layer（Init）'
   const background = new paper.Path.Rectangle({
