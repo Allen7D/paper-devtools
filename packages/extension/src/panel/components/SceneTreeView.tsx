@@ -1,74 +1,9 @@
 import React, { useEffect } from 'react';
-import { EyeOutlined, EyeInvisibleOutlined, CaretDownOutlined, CaretRightOutlined } from '@ant-design/icons';
-
-import { usePaperStore, PaperNode } from '../store';
-
-import './SceneTreeView.less';
 import { Button } from 'antd';
 
-interface TreeNodeProps {
-  node: PaperNode;
-  level: number;
-}
-
-const TreeNode: React.FC<TreeNodeProps> = ({ node, level }) => {
-  const { 
-    expandedNodes, 
-    toggleNodeExpanded, 
-    selectNode, 
-    toggleNodeVisibility,
-    selectedNode
-  } = usePaperStore();
-  
-  const isExpanded = expandedNodes.has(node.id);
-  const isSelected = selectedNode?.id === node.id;
-  
-  const handleToggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleNodeExpanded(node.id);
-  };
-  
-  const handleSelect = () => {
-    selectNode(node.id);
-  };
-  
-  const handleToggleVisibility = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleNodeVisibility(node.id);
-  };
-  
-  return (
-    <div className="tree-node-container">
-      <div 
-        className={`tree-node ${isSelected ? 'selected' : ''}`} 
-        style={{ paddingLeft: `${level * 16}px` }}
-        onClick={handleSelect}
-      >
-        {node.children.length > 0 && (
-          <span className="expand-icon" onClick={handleToggleExpand}>
-            {isExpanded ? <CaretDownOutlined /> : <CaretRightOutlined />}
-          </span>
-        )}
-        <span 
-          className="visibility-icon" 
-          onClick={handleToggleVisibility}
-        >
-          {node.visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-        </span>
-        <span className="node-type">{node.type}</span>
-        <span className="node-name">{node.name || '<无名称>'}</span>
-      </div>
-      
-      {isExpanded && node.children.length > 0 && (
-        <div className="tree-node-children">
-          {node.children.map((child) => (
-            <TreeNode key={child.id} node={child} level={level + 1} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+import { usePaperStore } from '../store';
+import { TreeNode } from './TreeNode';
+import './SceneTreeView.less';
 
 export const SceneTreeView: React.FC = () => {
   const { sceneTree, refreshSceneTree, connected } = usePaperStore();

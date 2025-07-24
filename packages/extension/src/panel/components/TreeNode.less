@@ -1,0 +1,302 @@
+// TreeNode 组件样式
+.tree-node-container {
+  width: 100%;
+  
+  .tree-node {
+    padding: 6px 0;
+    padding-left: var(--indent, 0px);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+    position: relative;
+    
+    // 鼠标悬停效果
+    &:hover {
+      background-color: rgba(76, 139, 245, 0.1);
+    }
+    
+    // 选中状态
+    &.selected {
+      background-color: rgba(76, 139, 245, 0.2);
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background-color: #4c8bf5;
+        border-radius: 0 2px 2px 0;
+      }
+    }
+    
+    // 展开/折叠图标
+    .expand-icon {
+      margin-right: 4px;
+      font-size: 10px;
+      cursor: pointer;
+      color: #666;
+      width: 12px;
+      height: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+      
+      &.expanded {
+        transform: rotate(90deg);
+      }
+      
+      &:hover {
+        color: #333;
+      }
+    }
+    
+    // 可见性图标
+    .visibility-icon {
+      margin-right: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #666;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s ease;
+      
+      &:hover {
+        color: #333;
+      }
+      
+      &.visible {
+        color: #52c41a;
+      }
+      
+      &.hidden {
+        color: #ff4d4f;
+      }
+    }
+    
+    // 节点类型标签
+    .node-type {
+      font-size: 10px;
+      color: #666;
+      margin-right: 8px;
+      background-color: #f0f0f0;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      
+      // 不同类型的颜色
+      &.project {
+        background-color: #e6f7ff;
+        color: #1890ff;
+        border: 1px solid #b3d8ff;
+      }
+      
+      &.layer {
+        background-color: #f6ffed;
+        color: #52c41a;
+        border: 1px solid #b7eb8f;
+      }
+      
+      &.group {
+        background-color: #fff7e6;
+        color: #fa8c16;
+        border: 1px solid #ffd591;
+      }
+      
+      &.path {
+        background-color: #f9f0ff;
+        color: #722ed1;
+        border: 1px solid #d3adf7;
+      }
+      
+      &.text, &.pointtext {
+        background-color: #fff1f0;
+        color: #f5222d;
+        border: 1px solid #ffccc7;
+      }
+      
+      // 新增更多类型样式
+      &.circle {
+        background-color: #e6fffb;
+        color: #13c2c2;
+        border: 1px solid #87e8de;
+      }
+      
+      &.rectangle {
+        background-color: #f0f5ff;
+        color: #597ef7;
+        border: 1px solid #adc6ff;
+      }
+      
+      &.ellipse {
+        background-color: #fffbe6;
+        color: #fadb14;
+        border: 1px solid #fff566;
+      }
+      
+      &.polygon {
+        background-color: #f9f0ff;
+        color: #9254de;
+        border: 1px solid #d3adf7;
+      }
+    }
+    
+    // 节点名称
+    .node-name {
+      font-size: 12px;
+      color: #333;
+      flex: 1;
+      font-weight: 400;
+      
+      // 空名称时的占位文本
+      &.empty {
+        color: #999;
+        font-style: italic;
+        
+        &::before {
+          content: '(未命名)';
+        }
+      }
+    }
+  }
+}
+
+// 子节点容器
+.tree-node-children {
+  width: 100%;
+}
+
+// 响应式设计 - TreeNode 特定部分
+@media (max-width: 300px) {
+  .tree-node-container {
+    .tree-node {
+      .node-type {
+        display: none;
+      }
+      
+      .node-name {
+        font-size: 11px;
+      }
+      
+      .expand-icon,
+      .visibility-icon {
+        width: 10px;
+        height: 10px;
+        font-size: 9px;
+      }
+    }
+  }
+}
+
+// 暗色主题支持 - TreeNode 特定部分
+@media (prefers-color-scheme: dark) {
+  .tree-node-container {
+    .tree-node {
+      &:hover {
+        background-color: rgba(76, 139, 245, 0.15);
+      }
+      
+      &.selected {
+        background-color: rgba(76, 139, 245, 0.25);
+      }
+      
+      .node-name {
+        color: #e6e6e6;
+        
+        &.empty {
+          color: #888;
+        }
+      }
+      
+      .expand-icon,
+      .visibility-icon {
+        color: #888;
+        
+        &:hover {
+          color: #e6e6e6;
+        }
+      }
+      
+      .visibility-icon {
+        &.visible {
+          color: #73d13d;
+        }
+        
+        &.hidden {
+          color: #ff7875;
+        }
+      }
+      
+      .node-type {
+        background-color: #2a2a2a;
+        color: #ccc;
+        border-color: #444;
+        
+        // 暗色主题下的类型颜色调整
+        &.project {
+          background-color: #002766;
+          color: #69c0ff;
+          border-color: #003a8c;
+        }
+        
+        &.layer {
+          background-color: #162312;
+          color: #95de64;
+          border-color: #389e0d;
+        }
+        
+        &.group {
+          background-color: #2b1d11;
+          color: #ffc069;
+          border-color: #d48806;
+        }
+        
+        &.path {
+          background-color: #22075e;
+          color: #b37feb;
+          border-color: #531dab;
+        }
+        
+        &.text, &.pointtext {
+          background-color: #2a1215;
+          color: #ff9c6e;
+          border-color: #a8071a;
+        }
+        
+        &.circle {
+          background-color: #002329;
+          color: #5cdbd3;
+          border-color: #006d75;
+        }
+        
+        &.rectangle {
+          background-color: #000b1a;
+          color: #85a5ff;
+          border-color: #003eb3;
+        }
+        
+        &.ellipse {
+          background-color: #2b2611;
+          color: #fff566;
+          border-color: #d48806;
+        }
+        
+        &.polygon {
+          background-color: #1d0c2b;
+          color: #c41d7f;
+          border-color: #722ed1;
+        }
+      }
+    }
+  }
+}
