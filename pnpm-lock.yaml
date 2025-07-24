@@ -89,6 +89,16 @@ importers:
         version: 1.2.4(vite@7.0.5(@types/node@24.1.0)(less@4.4.0)(terser@5.43.1))
 
   packages/example:
+    dependencies:
+      paper:
+        specifier: ^0.12.18
+        version: 0.12.18
+    devDependencies:
+      '@types/paper':
+        specifier: ^0.12.3
+        version: 0.12.3
+
+  packages/example1:
     devDependencies:
       '@eslint/js':
         specifier: ^9.30.1
