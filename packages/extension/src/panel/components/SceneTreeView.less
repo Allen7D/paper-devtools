@@ -4,28 +4,19 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   
-  // 头部区域
   .scene-tree-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 0;
-    border-bottom: 1px solid #e0e0e0;
-    
-    h5 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 500;
-      color: #333;
-    }
+    padding: 10px;
   }
-  
   // 内容区域
   .scene-tree-content {
     flex: 1;
     overflow: auto;
-    padding: 4px 0;
+    padding: 15px;
     
     // 滚动条样式
     &::-webkit-scrollbar {

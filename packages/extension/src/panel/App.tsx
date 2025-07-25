@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { Splitter } from 'antd';
 import { SceneTreeView } from './components/SceneTreeView';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { usePaperStore } from './store';
@@ -6,7 +7,6 @@ import './App.css';
 
 const App: React.FC = () => {
   const { connected, connectionStatus, initialize } = usePaperStore();
-  const [activeTab, setActiveTab] = useState<string>('scene');
 
   useEffect(() => {
     initialize();
@@ -19,24 +19,24 @@ const App: React.FC = () => {
         <div className="connection-status">
           状态: {connected ? '已连接' : connectionStatus}
         </div>
-        <div className="tabs">
-          <button 
-            className={activeTab === 'scene' ? 'active' : ''} 
-            onClick={() => setActiveTab('scene')}
-          >
-            场景树
-          </button>
-          <button 
-            className={activeTab === 'properties' ? 'active' : ''} 
-            onClick={() => setActiveTab('properties')}
-          >
-            属性
-          </button>
-        </div>
       </div>
       <div className="app-content">
-        {activeTab === 'scene' && <SceneTreeView />}
-        {activeTab === 'properties' && <PropertiesPanel />}
+        <Splitter>
+          <Splitter.Panel size="50%" min="20%" max="80%">
+            <div className="scene-panel">
+              <div className="panel-content">
+                <SceneTreeView />
+              </div>
+            </div>
+          </Splitter.Panel>
+          <Splitter.Panel>
+            <div className="properties-panel">
+              <div className="panel-content">
+                <PropertiesPanel />
+              </div>
+            </div>
+          </Splitter.Panel>
+        </Splitter>
       </div>
     </div>
   );

@@ -5,20 +5,10 @@
   flex-direction: column;
 }
 
-.properties-header {
-  padding: 10px 0;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 10px;
-}
-
-.properties-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
 .properties-content {
   flex: 1;
   overflow: auto;
+  padding: 15px;
 }
 
 .no-selection {

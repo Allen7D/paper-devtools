@@ -110,7 +110,7 @@ export const PropertiesPanel: React.FC = () => {
   return (
     <div className="properties-panel">
       <div className="properties-header">
-        <h3>属性: {selectedNode.name || selectedNode.type}</h3>
+        <div>属性: {selectedNode.name || selectedNode.type}</div>
       </div>
       <div className="properties-content">
         <div className="node-info">

@@ -26,7 +26,7 @@ export const SceneTreeView: React.FC = () => {
   return (
     <div className="scene-tree-container">
       <div className="scene-tree-header">
-        <h5>场景树</h5>
+        <div>场景树</div>
         <Button onClick={refreshSceneTree}>刷新</Button>
       </div>
       <div className="scene-tree-content">
