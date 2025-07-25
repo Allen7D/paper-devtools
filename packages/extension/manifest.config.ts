@@ -19,7 +19,7 @@ export default defineManifest({
     {
       matches: ["http://*/*", "https://*/*", "<all_urls>"],
       js: ['src/content/index.ts'],
-      run_at: 'document_end'
+      run_at: 'document_start',
     }
   ],
   background: {

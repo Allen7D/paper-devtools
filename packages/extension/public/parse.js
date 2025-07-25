@@ -93,14 +93,18 @@ function findNodeById(root, id) {
 }
 // 查找 Paper.js 中的项目
 function findPaperItemById(id) {
-	if (!window.__PAPER_JS__) return null;
+	if (!window.__PAPER_SCOPES__ || !window.__PAPER_SCOPES__.getActiveScope) return null;
+	
+	const activeScope = window.__PAPER_SCOPES__.getActiveScope();
+	if (!activeScope || !activeScope.project) return null;
+	
 	// 如果是根节点
 	if (id === 'root') {
-		return window.__PAPER_JS__.project;
+		return activeScope.project;
 	}
 	// 解析 ID 路径
 	const parts = id.split('_');
-	let current = window.__PAPER_JS__.project;
+	let current = activeScope.project;
 
 	// 跳过 'root'，从第一个子级开始
 	for (let i = 1; i < parts.length; i++) {
@@ -132,9 +136,12 @@ window.addEventListener('PAPER_DEVTOOLS_MESSAGE', function (event) {
 	let response = null;
 	switch (message.action) {
 		case 'GET_SCENE_TREE':
-			if (window.__PAPER_JS__ && window.__PAPER_JS__.project) {
-				const sceneTree = buildSceneTree(window.__PAPER_JS__.project);
-				response = { sceneTree };
+			if (window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.getActiveScope) {
+				const activeScope = window.__PAPER_SCOPES__.getActiveScope();
+				if (activeScope && activeScope.project) {
+					const sceneTree = buildSceneTree(activeScope.project);
+					response = { sceneTree };
+				}
 			}
 			break;
 		case 'SELECT_NODE':
@@ -142,8 +149,11 @@ window.addEventListener('PAPER_DEVTOOLS_MESSAGE', function (event) {
 				const item = findPaperItemById(message.nodeId);
 				if (item) {
 					// 取消所有选择
-					if (window.__PAPER_JS__.project) {
-						window.__PAPER_JS__.project.deselectAll();
+					if (window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.getActiveScope) {
+						const activeScope = window.__PAPER_SCOPES__.getActiveScope();
+						if (activeScope && activeScope.project) {
+							activeScope.project.deselectAll();
+						}
 					}
 					// 选择当前项目
 					if (item.selected !== undefined) {
@@ -162,8 +172,13 @@ window.addEventListener('PAPER_DEVTOOLS_MESSAGE', function (event) {
 				if (item && item.visible !== undefined) {
 					item.visible = !item.visible;
 					// 重新构建场景树
-					const sceneTree = buildSceneTree(window.__PAPER_JS__.project);
-					response = { sceneTree };
+					if (window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.getActiveScope) {
+						const activeScope = window.__PAPER_SCOPES__.getActiveScope();
+						if (activeScope && activeScope.project) {
+							const sceneTree = buildSceneTree(activeScope.project);
+							response = { sceneTree };
+						}
+					}
 				}
 			}
 			break;
@@ -185,8 +200,11 @@ window.addEventListener('PAPER_DEVTOOLS_MESSAGE', function (event) {
 							item[message.property] = message.value;
 						}
 						// 如果有视图，重绘
-						if (window.__PAPER_JS__.view) {
-							window.__PAPER_JS__.view.update();
+						if (window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.getActiveScope) {
+							const activeScope = window.__PAPER_SCOPES__.getActiveScope();
+							if (activeScope && activeScope.view) {
+								activeScope.view.update();
+							}
 						}
 						// 构建更新后的节点信息
 						const node = buildSceneTree(item, message.nodeId);

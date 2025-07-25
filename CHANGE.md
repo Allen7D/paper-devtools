@@ -6,3 +6,9 @@
   - 新增 public/paper-detection.js，内容为原检测逻辑。
   - injectDetectionScript 改为动态创建 script 元素，src 指向 chrome.runtime.getURL('paper-detection.js')，加载后自动移除。
 - 影响：解决了内容安全策略导致的脚本注入失败问题，保证扩展功能正常。 
+
+
+
+### content/index.js 的执行时机
+目前发现比页面要慢，所以使用 `globalThis.__PAPER_SCOPE__` 让用户先注入，插件后续自行去获取。
+但考虑到监控期，还需要在考虑清楚获取的方式。

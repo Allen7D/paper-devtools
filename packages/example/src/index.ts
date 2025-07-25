@@ -19,9 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // 初始化 Paper.js
   paperScope.setup(canvas);
   
-  // 将 paper 实例暴露到全局，以便 DevTools 扩展访问
-  (window as any).__PAPER_JS__ = paperScope;
-  
+  // 注册当前的 paperScope
+  globalThis.__PAPER_SCOPE__ = {
+    scopeId: paperScope.view.element.id || 'default',
+    paperScope: paperScope,
+  }
   // 创建多层示例图形
   createShapes(paperScope);
 });
