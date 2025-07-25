@@ -379,16 +379,16 @@ export const PropertiesPanel: React.FC = () => {
             </Text>
           </Space>
         } style={{ marginBottom: 16 }}>
-          <Descriptions size="small" column={1} bordered={false}>
+          <Descriptions size="small" column={3} bordered={false}>
             <Descriptions.Item label="ID">
               <Text code>{selectedNode.id}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="类型">
               <Text>{selectedNode.type}</Text>
             </Descriptions.Item>
-            <Descriptions.Item label="可见性">
+            <Descriptions.Item label="显隐">
               <Text type={selectedNode.visible ? 'success' : 'secondary'}>
-                {selectedNode.visible ? '可见' : '隐藏'}
+                {selectedNode.visible ? '显示' : '隐藏'}
               </Text>
             </Descriptions.Item>
           </Descriptions>

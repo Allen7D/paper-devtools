@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 
 import { usePaperStore } from '../store';
 import { TreeNode } from './TreeNode';
@@ -26,8 +27,7 @@ export const SceneTreeView: React.FC = () => {
   return (
     <div className="scene-tree-container">
       <div className="scene-tree-header">
-        <div>场景树</div>
-        <Button onClick={refreshSceneTree}>刷新</Button>
+        <Button onClick={refreshSceneTree} icon={<ReloadOutlined />} size="small" />
       </div>
       <div className="scene-tree-content">
         <TreeNode node={sceneTree} level={0} />
