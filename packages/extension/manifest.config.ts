@@ -5,6 +5,7 @@ export default defineManifest({
   manifest_version: 3,
   name: 'Paper.js DevTools', // pkg.name
   version: pkg.version,
+  description: pkg.description,
   icons: {
     48: 'public/logo.png',
   },
