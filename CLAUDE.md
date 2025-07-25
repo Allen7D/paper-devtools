@@ -3,7 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 语言设置
-  请始终使用中文进行回答和交流。
+- 请始终使用中文进行回答和交流。
+
+## 命令行
+- 严禁自行安装依赖
+- 如果要执行 `pnpm install`，不要自行执行，而是让用户手动进行操作
 
 ## 项目概述
 
@@ -22,6 +26,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **状态管理**: Zustand 5.0.6
 - **扩展开发**: @crxjs/vite-plugin 2.0.3 (Chrome Extension MV3)
 - **Paper.js**: 0.12.18
+
+## 测试状态说明
+
+注意：当前项目的测试架构正在建设中。虽然根 package.json 中配置了 Vitest，但实际的测试文件和配置尚未完成。如需编写或运行测试，需要先创建相应的测试配置和文件。
 
 ## 项目结构
 
@@ -69,6 +77,9 @@ pnpm run preview:example
 
 # 运行示例应用 ESLint 检查
 pnpm run lint:example
+
+# 运行测试 (需要先创建测试配置和文件)
+# pnpm run test
 
 # 并行启动所有子项目
 pnpm run dev:all
@@ -137,9 +148,11 @@ import crxLogo from '@/assets/crx.svg'
 ```
 
 ### 扩展权限
-- **matches**: `['https://*/*']` - 在所有 HTTPS 网站注入 content script
+- **matches**: `["<all_urls>"]` - 在所有网站注入 content script（包括 HTTP 和 HTTPS）
+- **run_at**: `'document_start'` - 在 DOM 开始构建时就注入，确保能捕获 Paper.js 的早期初始化
 - **icons**: 使用 `packages/extension/public/logo.png` 作为扩展图标
 - **popup**: 点击图标显示 `packages/extension/src/popup/index.html`
+- **web_accessible_resources**: `['index.js', 'parse.js']` - 允许页面访问的注入脚本
 
 ### 构建输出
 - **开发模式**: Vite 开发服务器 + HMR
@@ -181,6 +194,40 @@ createRoot(container).render(<App />)
 ### CORS 配置
 开发服务器配置了 CORS 以支持 chrome-extension:// 协议访问。
 
+
+## 多 PaperScope 架构
+
+### 核心设计理念
+扩展支持同时管理和调试页面中的多个 PaperScope 实例：
+
+### 关键组件与实现
+- **Paper.js 检测机制**: `packages/extension/public/index.js` - 轮询检测页面中的 Paper.js 实例（最多10次，每秒1次）
+- **场景树构建**: `packages/extension/public/parse.js` - 递归构建 Paper.js 对象层次结构，支持 Project 和 Item 对象
+- **通信桥梁**: Content Script 通过 CustomEvent 与注入脚本通信，DevTools 面板通过 chrome.tabs.sendMessage 与 Content Script 通信
+- **向后兼容**: 保持对传统 `window.__PAPER_JS__` 接口的支持
+
+### 多实例支持特性
+- **动态检测**: 自动检测页面中的所有 Paper.js 实例
+- **实例管理**: 支持实例注册、激活、切换和销毁
+- **作用域隔离**: 每个实例拥有独立的对象树和状态
+- **向后兼容**: 完全兼容现有的单实例应用
+- **画布关联**: 每个 PaperScope 与对应的 Canvas 元素关联
+
+### 全局接口设计
+```javascript
+// 新的多实例全局接口
+window.__PAPER_SCOPES__ = {
+  scopes: Map<string, PaperScopeData>,
+  activeScope: string | null,
+  register(scopeId, paperScope, canvas),
+  getActiveScope(),
+  switchScope(scopeId),
+  getAllScopes()
+}
+
+// 注意: window.__PAPER_JS__ 已废弃，现在使用 window.__PAPER_SCOPES__
+```
+
 ## DevTools 面板架构
 
 扩展实现了完整的 Chrome DevTools 面板，用于调试 Paper.js 应用：
@@ -192,10 +239,12 @@ createRoot(container).render(<App />)
 - **节点选择**: 当前选中的场景对象
 - **属性编辑**: 实时修改对象属性
 
-### 面板组件
-- **SceneTreeView**: 显示 Paper.js 场景树层次结构
-- **PropertiesPanel**: 显示和编辑选中对象的属性
-- **App**: 主面板容器组件
+### 面板组件架构
+- **App**: 主面板容器，使用 Ant Design Splitter 组件实现左右分栏布局
+- **SceneTreeView**: 左侧场景树面板，递归显示 Paper.js 对象层次结构，支持展开/折叠和节点选择
+- **TreeNode**: 可重用的树节点组件，支持图标显示、可见性切换和选择状态
+- **PropertiesPanel**: 右侧属性编辑面板，包含智能属性编辑器
+- **PropertyEditor**: 智能属性编辑系统，根据属性类型自动选择合适的编辑器（颜色、坐标、尺寸等）
 
 ### 通信机制
 通过 `chrome.tabs.sendMessage` 与页面中的 Content Script 通信：
@@ -224,15 +273,62 @@ createRoot(container).render(<App />)
 - **paperShapes.ts**: 预定义形状和绘图辅助函数
 - **paperTools.ts**: Paper.js 工具事件处理
 
+## Chrome 扩展三层通信架构
+
+### 通信流程图
+```
+DevTools Panel (React) 
+    ↓ chrome.tabs.sendMessage
+Content Script (注入页面)
+    ↓ CustomEvent ('PAPER_JS_DETECTED' 等)  
+Injected Scripts (public/index.js, parse.js)
+    ↓ 直接访问
+Paper.js API (window.paper, window.__PAPER_SCOPES__)
+```
+
+### 具体实现
+1. **DevTools → Content Script**: 使用 `chrome.tabs.sendMessage` 发送命令（如 `GET_SCENE_TREE`）
+2. **Content Script → Injected Scripts**: 动态加载 `public/index.js` 和 `public/parse.js`，通过 CustomEvent 通信
+3. **Injected Scripts → Paper.js**: 直接访问页面中的 Paper.js 实例和全局变量
+
+### 注入策略
+- **早期注入**: `run_at: 'document_start'` 确保在 Paper.js 初始化前就开始监听
+- **动态脚本加载**: 使用 `chrome.runtime.getURL` 获取脚本 URL，规避 CSP 限制
+- **事件驱动通信**: 避免跨域限制，使用 CustomEvent 在页面上下文间传递数据
+
+### 关键文件说明
+- **packages/extension/src/content/index.ts**: Content Script 入口，负责动态加载注入脚本
+- **packages/extension/public/index.js**: 注入脚本，检测 Paper.js 并建立通信桥梁
+- **packages/extension/public/parse.js**: 场景树解析器，递归构建 Paper.js 对象结构
+- **packages/extension/src/panel/store/index.ts**: Zustand 状态管理，存储面板状态和数据
+
+## 智能属性编辑系统
+
+### 类型检测算法
+系统根据属性名称和值自动判断编辑器类型：
+- **颜色属性**: 检测 `color`、`fillColor`、`strokeColor` 等关键字
+- **坐标点**: 检测 `{x, y}` 结构的对象
+- **尺寸**: 检测 `{width, height}` 结构
+- **透明度**: 检测 `opacity`、`alpha` 属性
+- **角度**: 检测 `angle`、`rotation` 属性
+
+### 编辑器组件
+- **ColorEditor**: Ant Design ColorPicker，支持 RGB/HSL/Hex 格式
+- **PointEditor**: 双输入框，分别编辑 X/Y 坐标
+- **SizeEditor**: 双输入框，分别编辑宽度/高度
+- **ObjectEditor**: 可折叠面板，用于编辑嵌套对象
+- **基础编辑器**: Input、InputNumber、Switch 用于字符串、数字、布尔值
+
 ## 当前实现状态
 
-- ✅ pnpm workspaces 结构
-- ✅ Chrome 扩展基础架构
+- ✅ pnpm workspaces 结构完整
+- ✅ Chrome MV3 扩展架构（CRXJS + Vite）
 - ✅ DevTools 面板 (React + Zustand + Ant Design)
-- ✅ Paper.js 场景树检测和显示
-- ✅ 节点选择和属性编辑功能
-- ✅ Paper.js 示例应用 (完整绘图工具)
-- ✅ 多种绘图工具 (矩形、圆形、线条、自由绘制等)
-- ⚠️ Background script 目录存在但为空
-- ⚠️ Content Script 实现需要完善
-- ⚠️ 场景树数据结构需要优化
+- ✅ Paper.js 检测和场景树显示
+- ✅ 智能属性编辑系统
+- ✅ 节点选择和可见性切换
+- ✅ Paper.js 示例应用（完整绘图工具）
+- ✅ 三层通信架构（DevTools ↔ Content ↔ Injected）
+- ⚠️ 多实例支持架构已设计但未完全实现
+- ⚠️ Background Script 为空（可扩展功能）
+- ⚠️ 测试架构需要建设
