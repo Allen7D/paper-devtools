@@ -16,8 +16,21 @@ export default defineConfig({
     rollupOptions: {
       input: {
         panel: path.resolve(__dirname, 'src/panel/index.html'),
+        // 添加注入脚本的构建入口点
+        'index': path.resolve(__dirname, 'src/inject/index.ts'),
+        'parse': path.resolve(__dirname, 'src/inject/parse.ts'),
+      },
+      output: {
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === 'index') {
+            return 'inject/index.js';
+          } else if (chunkInfo.name === 'parse') {
+            return 'inject/parse.js';
+          }
+          return '[name]-[hash].js';
+        }
       }
-    }
+    },
   },
   plugins: [
     react(),

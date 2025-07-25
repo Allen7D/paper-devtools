@@ -1,7 +1,7 @@
 // 会往每个页面，注入检测脚本
 function injectDetectionScript() {
   const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('index.js');
+  script.src = chrome.runtime.getURL('inject/index.js');
   script.type = 'text/javascript';
   script.onload = function () {
     script.remove();
@@ -12,7 +12,7 @@ function injectDetectionScript() {
 // 注入用于获取场景树的脚本
 function injectSceneTreeScript() {
   const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('parse.js');
+  script.src = chrome.runtime.getURL('inject/parse.js');
   script.type = 'text/javascript';
   script.onload = function () {
     script.remove();

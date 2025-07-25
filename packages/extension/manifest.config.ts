@@ -29,7 +29,7 @@ export default defineManifest({
   permissions: ['storage', 'activeTab', 'scripting'],
   web_accessible_resources: [
     {
-      resources: ['index.js', 'parse.js'],
+      resources: ['inject/index.js', 'inject/parse.js'],
       matches: ['<all_urls>']
     }
   ]
