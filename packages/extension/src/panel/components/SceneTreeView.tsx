@@ -3,6 +3,7 @@ import { Button } from 'antd';
 
 import { usePaperStore } from '../store';
 import { TreeNode } from './TreeNode';
+
 import './SceneTreeView.less';
 
 export const SceneTreeView: React.FC = () => {
@@ -21,8 +22,6 @@ export const SceneTreeView: React.FC = () => {
   if (!sceneTree) {
     return <div className="scene-tree-container">加载场景树...</div>;
   }
-
-  console.log('sceneTree', sceneTree);
   
   return (
     <div className="scene-tree-container">
