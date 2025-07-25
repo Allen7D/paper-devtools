@@ -38,6 +38,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     
     // 发送消息到内容脚本，检查页面是否包含 Paper.js
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      console.log('>>> tabs', tabs);
       const tabId = tabs[0]?.id;
       if (!tabId) return;
       
