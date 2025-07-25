@@ -16,7 +16,8 @@ import {
 } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import { usePaperStore } from '../store';
-import './PropertiesPanel.css';
+
+import './PropertiesPanel.less';
 
 const { Text } = Typography;
 

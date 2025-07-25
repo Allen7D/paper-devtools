@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import { ConfigProvider, theme } from "antd";
 
 import App from "./App";
-import "./index.css";
+import "./index.less";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <ConfigProvider

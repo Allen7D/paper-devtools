@@ -1,0 +1,34 @@
+// PropertiesPanel 属性面板样式
+.properties-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  // 内容区域
+  .properties-content {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+    
+    // 属性编辑器间距
+    .ant-form-item {
+      margin-bottom: 12px;
+    }
+    
+    // 折叠面板样式
+    .ant-collapse {
+      border: none;
+      background: transparent;
+      
+      .ant-collapse-item {
+        border-bottom: 1px solid #f0f0f0;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+} 

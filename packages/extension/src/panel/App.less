@@ -1,0 +1,46 @@
+// App 主容器样式
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+
+  // 头部区域
+  .app-header {
+    padding: 10px 15px;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f8f8f8;
+
+    h1 {
+      font-size: 1.2rem;
+      margin: 0 0 10px 0;
+    }
+
+    .connection-status {
+      font-size: 0.8rem;
+      color: #666;
+    }
+  }
+
+  // 内容区域
+  .app-content {
+    flex: 1;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+  }
+}
+
+// 面板通用样式
+.scene-panel,
+.properties-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .panel-content {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+  }
+}

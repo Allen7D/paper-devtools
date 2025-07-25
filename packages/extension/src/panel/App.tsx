@@ -3,7 +3,7 @@ import { Splitter } from 'antd';
 import { SceneTreeView } from './components/SceneTreeView';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import { usePaperStore } from './store';
-import './App.css';
+import './App.less';
 
 const App: React.FC = () => {
   const { connected, connectionStatus, initialize } = usePaperStore();
