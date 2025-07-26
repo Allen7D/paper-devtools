@@ -16,20 +16,18 @@ const App: React.FC = () => {
     <div className="app-container">
       <div className="app-header">
         <h1>Paper.js DevTools</h1>
-        <div className="connection-status">
-          状态: {connected ? '已连接' : connectionStatus}
-        </div>
+        <div className="connection-status">状态: {connected ? '已连接' : connectionStatus}</div>
       </div>
       <div className="app-content">
         <Splitter>
-          <Splitter.Panel size="50%" min="20%" max="80%">
+          <Splitter.Panel defaultSize="50%" min="20%" max="80%">
             <div className="scene-panel">
               <div className="panel-content">
                 <SceneTreeView />
               </div>
             </div>
           </Splitter.Panel>
-          <Splitter.Panel>
+          <Splitter.Panel defaultSize="50%">
             <div className="properties-panel">
               <div className="panel-content">
                 <PropertiesPanel />
@@ -42,4 +40,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App; 
+export default App;

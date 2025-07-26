@@ -1,10 +1,10 @@
-import path from 'node:path'
-import { crx } from '@crxjs/vite-plugin'
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
-import zip from 'vite-plugin-zip-pack'
-import manifest from './manifest.config.js'
-import { name, version } from './package.json'
+import path from 'node:path';
+import { crx } from '@crxjs/vite-plugin';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import zip from 'vite-plugin-zip-pack';
+import manifest from './manifest.config.js';
+import { name, version } from './package.json';
 
 export default defineConfig({
   resolve: {
@@ -16,26 +16,36 @@ export default defineConfig({
     rollupOptions: {
       input: {
         panel: path.resolve(__dirname, 'src/panel/index.html'),
-        // 添加注入脚本的构建入口点
-        'index': path.resolve(__dirname, 'src/inject/index.ts'),
-        'parse': path.resolve(__dirname, 'src/inject/parse.ts'),
+        // 注入脚本由独立的 vite.inject.config.ts 配置处理
       },
-      output: {
-        entryFileNames: (chunkInfo) => {
-          if (chunkInfo.name === 'index') {
-            return 'inject/index.js';
-          } else if (chunkInfo.name === 'parse') {
-            return 'inject/parse.js';
-          }
-          return '[name]-[hash].js';
-        }
-      }
     },
   },
   plugins: [
     react(),
     crx({ manifest }),
     zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` }),
+    {
+      name: 'inject-manifest-plugin',
+      enforce: 'post',
+      writeBundle() {
+        // 自动更新 manifest.json 的 web_accessible_resources
+        const fs = require('fs')
+        const manifestPath = path.resolve(__dirname, 'dist/chrome/manifest.json')
+        if (fs.existsSync(manifestPath)) {
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
+          if (manifest.web_accessible_resources && manifest.web_accessible_resources[0]) {
+            const resources = manifest.web_accessible_resources[0].resources
+            if (!resources.includes('inject/index.js')) {
+              resources.push('inject/index.js')
+            }
+            if (!resources.includes('inject/parse.js')) {
+              resources.push('inject/parse.js')
+            }
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
+          }
+        }
+      },
+    },
   ],
   css: {
     preprocessorOptions: {
@@ -51,9 +61,7 @@ export default defineConfig({
   },
   server: {
     cors: {
-      origin: [
-        /chrome-extension:\/\//,
-      ],
+      origin: [/chrome-extension:\/\//],
     },
   },
-})
+});

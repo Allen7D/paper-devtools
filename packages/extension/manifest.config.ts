@@ -1,5 +1,5 @@
-import { defineManifest } from '@crxjs/vite-plugin'
-import pkg from './package.json'
+import { defineManifest } from '@crxjs/vite-plugin';
+import pkg from './package.json';
 
 export default defineManifest({
   manifest_version: 3,
@@ -18,20 +18,20 @@ export default defineManifest({
   devtools_page: 'src/devtools/index.html',
   content_scripts: [
     {
-      matches: ["http://*/*", "https://*/*", "<all_urls>"],
+      matches: ['http://*/*', 'https://*/*', '<all_urls>'],
       js: ['src/content/index.ts'],
       run_at: 'document_start',
-    }
+    },
   ],
   background: {
     service_worker: 'src/background/index.ts',
-    type: 'module'
+    type: 'module',
   },
   permissions: ['storage', 'activeTab', 'scripting'],
   web_accessible_resources: [
     {
-      resources: ['inject/index.js', 'inject/parse.js'],
-      matches: ['<all_urls>']
-    }
-  ]
-})
+      resources: [], // 注入脚本通过动态加载，不需要在 manifest 中预声明
+      matches: ['<all_urls>'],
+    },
+  ],
+});

@@ -30,7 +30,7 @@ injectDetectionScript();
 window.addEventListener('PAPER_JS_DETECTED', () => {
   console.log('Paper.js 已检测到');
   paperJsDetected = true;
-  
+
   // 识别到 Paper.js 后，注入场景树脚本
   injectSceneTreeScript();
 });
@@ -40,17 +40,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   console.log('>>> message', message);
 
   if (!message || !message.action) return;
-  
+
   switch (message.action) {
     case 'DETECT_PAPER_JS':
       // 再次尝试注入检测脚本
       if (!paperJsDetected) {
         injectDetectionScript();
       }
-      
+
       sendResponse({ detected: paperJsDetected });
       break;
-      
+
     case 'GET_SCENE_TREE':
     case 'SELECT_NODE':
     case 'TOGGLE_NODE_VISIBILITY':
@@ -59,36 +59,36 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ error: 'Paper.js 未检测到' });
         return;
       }
-      
+
       // 生成唯一消息 ID
       const messageId = Date.now().toString();
-      
+
       // 创建一次性监听器等待响应
       const listener = (event: CustomEvent) => {
         const data = event.detail;
         if (data && data.id === messageId) {
           // 移除监听器
           window.removeEventListener('PAPER_DEVTOOLS_RESPONSE', listener as EventListener);
-          
+
           // 发送响应
           sendResponse(data.response);
         }
       };
-      
+
       // 添加监听器
       window.addEventListener('PAPER_DEVTOOLS_RESPONSE', listener as EventListener);
-      
+
       // 发送消息到页面脚本
       window.dispatchEvent(
-        new CustomEvent('PAPER_DEVTOOLS_MESSAGE', { 
-          detail: { 
+        new CustomEvent('PAPER_DEVTOOLS_MESSAGE', {
+          detail: {
             ...message,
-            id: messageId 
-          } 
-        })
+            id: messageId,
+          },
+        }),
       );
-      
+
       // 返回 true 表示将异步发送响应
       return true;
   }
-}); 
+});

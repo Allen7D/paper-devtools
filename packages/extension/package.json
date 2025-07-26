@@ -5,8 +5,12 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "run-p dev:*",
+    "dev:chrome": "vite",
+    "dev:inject": "vite build --config vite.inject.config.ts --watch --mode development",
+    "build": "run-s build:*",
+    "build:chrome": "tsc -b && vite build",
+    "build:inject": "vite build --config vite.inject.config.ts",
     "preview": "vite preview"
   }
 }
