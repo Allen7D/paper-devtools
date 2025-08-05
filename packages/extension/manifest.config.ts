@@ -30,7 +30,7 @@ export default defineManifest({
   permissions: ['storage', 'activeTab', 'scripting'],
   web_accessible_resources: [
     {
-      resources: [], // 注入脚本通过动态加载，不需要在 manifest 中预声明
+      resources: ['inject/*'],
       matches: ['<all_urls>'],
     },
   ],
