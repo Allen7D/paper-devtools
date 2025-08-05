@@ -84,9 +84,9 @@
 
         // 验证注册成功
         if (globalThis.__PAPER_SCOPES__?.getActiveScope()) {
-          // 通知内容脚本 Paper.js 已检测到
+          // 通知内容脚本 paperScope 已检测到
           window.dispatchEvent(new CustomEvent('PAPER_JS_DETECTED'));
-          console.log('>>> Paper.js 检测成功，已注册实例:', paperScope.scopeId);
+          console.log('>>> Paper.js 检测成功，对应 Canvas 上的 scope 为:', paperScope.scopeId);
           stopPolling();
           return;
         }
