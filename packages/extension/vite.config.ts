@@ -2,6 +2,7 @@ import path from 'node:path';
 import { crx } from '@crxjs/vite-plugin';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import fs from 'node:fs';
 import zip from 'vite-plugin-zip-pack';
 import manifest from './manifest.config.js';
 import { name, version } from './package.json';
@@ -29,7 +30,6 @@ export default defineConfig({
       enforce: 'post',
       writeBundle() {
         // 自动更新 manifest.json 的 web_accessible_resources
-        const fs = require('fs')
         const manifestPath = path.resolve(__dirname, 'dist/chrome/manifest.json')
         if (fs.existsSync(manifestPath)) {
           const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'))
