@@ -19,7 +19,7 @@ function buildScopeProject(project: paper.Project) {
     children.forEach((child, index) => {
       const childNode = buildScopeTree(child, `${nodeId}_${index}`);
       if (childNode) {
-        node.children.push(childNode);
+        node.children?.push(childNode);
       }
     });
   }
@@ -106,7 +106,7 @@ function findPaperItemById(id: string): paper.Item | null {
 }
 // 监听来自内容脚本的消息
 window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
-  const message = event.detail;
+  const message = (event as any).detail;
   if (!message || !message.action) return;
   let response = null;
   switch (message.action) {
@@ -169,6 +169,7 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         if (item) {
           try {
             // 处理特殊属性
+            console.log("Update Property:", message.property, message.value);
             if (
               message.property === "position" &&
               typeof message.value === "object"
@@ -180,8 +181,9 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
             } else if (message.property === "strokeColor") {
               item.strokeColor = message.value;
             } else {
-              // 直接设置属性
-              item[message.property] = message.value;
+              item.set({
+                [message.property]: message.value
+              });
             }
             // 如果有视图，重绘
             if (
