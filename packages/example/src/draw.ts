@@ -191,8 +191,8 @@ export function createShapes(paperScope: paper.PaperScope) {
 
 	// 主标题
 	const title = new paperScope.PointText({
-		point: [400, 50],
-		content: 'Paper.js 多图层示例',
+		point: [200, 50],
+		content: 'Paper.js 多图层示例' + (new Date()).getTime(),
 		fillColor: '#343a40',
 		fontFamily: 'Arial',
 		fontSize: 18,
