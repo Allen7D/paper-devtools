@@ -1,0 +1,125 @@
+.tree-node-container {
+  width: 100%;
+}
+.tree-node-container .tree-node {
+  padding: 4px 0;
+  padding-left: var(--indent, 0px);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+  position: relative;
+}
+.tree-node-container .tree-node:hover {
+  background-color: rgba(76, 139, 245, 0.1);
+}
+.tree-node-container .tree-node.selected {
+  background-color: rgba(76, 139, 245, 0.2);
+}
+.tree-node-container .tree-node.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #4c8bf5;
+  border-radius: 0 2px 2px 0;
+}
+.tree-node-container .tree-node.hovered:not(.selected) {
+  background-color: rgba(66, 133, 244, 0.1);
+}
+.tree-node-container .tree-node .expand-icon {
+  margin-right: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  color: #666;
+  width: 12px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+.tree-node-container .tree-node .expand-icon.expanded {
+  transform: rotate(90deg);
+}
+.tree-node-container .tree-node .expand-icon:hover {
+  color: #333;
+}
+.tree-node-container .tree-node .visibility-icon {
+  margin-right: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+.tree-node-container .tree-node .visibility-icon:hover {
+  color: #333;
+}
+.tree-node-container .tree-node .visibility-icon.visible {
+  color: #52c41a;
+}
+.tree-node-container .tree-node .visibility-icon.hidden {
+  color: #ff4d4f;
+}
+.tree-node-container .tree-node .node-type {
+  font-size: 10px;
+  color: #666;
+  margin-right: 8px;
+  background-color: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+.tree-node-container .tree-node .node-type.project {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+.tree-node-container .tree-node .node-type.layer {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+.tree-node-container .tree-node .node-type.group {
+  background-color: #fff7e6;
+  color: #fa8c16;
+}
+.tree-node-container .tree-node .node-type.path {
+  background-color: #f9f0ff;
+  color: #722ed1;
+}
+.tree-node-container .tree-node .node-type.text,
+.tree-node-container .tree-node .node-type.pointtext {
+  background-color: #fff1f0;
+  color: #f5222d;
+}
+.tree-node-container .tree-node .node-name {
+  font-size: 12px;
+  color: #333;
+  flex: 1;
+  font-weight: 400;
+}
+.tree-node-container .tree-node .node-name.empty {
+  color: #999;
+  font-style: italic;
+}
+.tree-node-container .tree-node .node-name.empty::before {
+  content: '(未命名)';
+}
+.tree-node-container .tree-node .search-highlight {
+  background-color: #ffe58f;
+  color: #333;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.tree-node-children {
+  width: 100%;
+}

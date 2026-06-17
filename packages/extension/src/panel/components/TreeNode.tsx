@@ -7,9 +7,28 @@ import './TreeNode.less';
 interface TreeNodeProps {
   node: PaperNode;
   level: number;
+  searchQuery?: string;
 }
 
-export const TreeNode: React.FC<TreeNodeProps> = ({ node, level }) => {
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+  const index = lowerText.indexOf(lowerQuery);
+
+  if (index === -1) return <>{text}</>;
+
+  return (
+    <>
+      {text.slice(0, index)}
+      <mark className="search-highlight">{text.slice(index, index + query.length)}</mark>
+      {text.slice(index + query.length)}
+    </>
+  );
+}
+
+export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '' }) => {
   const {
     expandedNodes,
     toggleNodeExpanded,
@@ -107,18 +126,18 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level }) => {
         </span>
 
         <span className={`node-type ${getTypeClassName(node.type)}`}>
-          {node.type}
+          <HighlightText text={node.type} query={searchQuery} />
         </span>
 
         <span className={`node-name ${!node.name ? 'empty' : ''}`}>
-          {node.name || ''}
+          {node.name ? <HighlightText text={node.name} query={searchQuery} /> : ''}
         </span>
       </div>
 
       {isExpanded && node.children.length > 0 && (
         <div className="tree-node-children">
           {node.children.map((child) => (
-            <TreeNode key={child.id} node={child} level={level + 1} />
+            <TreeNode key={child.id} node={child} level={level + 1} searchQuery={searchQuery} />
           ))}
         </div>
       )}

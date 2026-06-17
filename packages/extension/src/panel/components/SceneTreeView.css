@@ -1,0 +1,59 @@
+.scene-tree-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.scene-tree-container .scene-tree-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 0 0;
+}
+.scene-tree-container .scene-tree-header .scope-selector {
+  flex: 1;
+  min-width: 0;
+}
+.scene-tree-container .scene-tree-header .scope-label {
+  flex: 1;
+  font-size: 12px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scene-tree-container .scene-tree-header .scope-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.scene-tree-container .scene-tree-search {
+  padding: 6px 10px;
+}
+.scene-tree-container .scene-tree-empty {
+  padding: 16px;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+.scene-tree-container .scene-tree-content {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+.scene-tree-container .scene-tree-content::-webkit-scrollbar {
+  width: 6px;
+}
+.scene-tree-container .scene-tree-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+.scene-tree-container .scene-tree-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+.scene-tree-container .scene-tree-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

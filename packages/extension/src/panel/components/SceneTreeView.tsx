@@ -1,11 +1,32 @@
-import React, { useEffect } from 'react';
-import { Button, Select, Tag, Tooltip } from 'antd';
-import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined } from '@ant-design/icons';
+import React, { useEffect, useMemo } from 'react';
+import { Button, Input, Select, Tag, Tooltip } from 'antd';
+import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined } from '@ant-design/icons';
 
-import { usePaperStore } from '../store';
+import { usePaperStore, PaperNode } from '../store';
 import { TreeNode } from './TreeNode';
 
 import './SceneTreeView.less';
+
+function filterTree(node: PaperNode, query: string): PaperNode | null {
+  if (!query) return node;
+
+  const lowerQuery = query.toLowerCase();
+  const nameMatch = node.name.toLowerCase().includes(lowerQuery);
+  const typeMatch = node.type.toLowerCase().includes(lowerQuery);
+
+  const filteredChildren = node.children
+    .map(child => filterTree(child, query))
+    .filter((child): child is PaperNode => child !== null);
+
+  if (nameMatch || typeMatch || filteredChildren.length > 0) {
+    return {
+      ...node,
+      children: filteredChildren,
+    };
+  }
+
+  return null;
+}
 
 export const SceneTreeView: React.FC = () => {
   const {
@@ -19,6 +40,8 @@ export const SceneTreeView: React.FC = () => {
     setOverlayEnabled,
     pickerEnabled,
     togglePicker,
+    searchQuery,
+    setSearchQuery,
   } = usePaperStore();
 
   useEffect(() => {
@@ -26,6 +49,11 @@ export const SceneTreeView: React.FC = () => {
       refreshSceneTree();
     }
   }, [connected, refreshSceneTree]);
+
+  const filteredTree = useMemo(() => {
+    if (!sceneTree) return null;
+    return filterTree(sceneTree, searchQuery);
+  }, [sceneTree, searchQuery]);
 
   if (!connected) {
     return <div className="scene-tree-container">等待连接 Paper.js 应用...</div>;
@@ -81,8 +109,22 @@ export const SceneTreeView: React.FC = () => {
         </Tooltip>
         <Button onClick={refreshSceneTree} icon={<ReloadOutlined />} size="small" />
       </div>
+      <div className="scene-tree-search">
+        <Input
+          placeholder="搜索节点名称或类型..."
+          prefix={<SearchOutlined />}
+          allowClear
+          size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
       <div className="scene-tree-content">
-        <TreeNode node={sceneTree} level={0} />
+        {filteredTree ? (
+          <TreeNode node={filteredTree} level={0} searchQuery={searchQuery} />
+        ) : (
+          <div className="scene-tree-empty">未找到匹配的节点</div>
+        )}
       </div>
     </div>
   );

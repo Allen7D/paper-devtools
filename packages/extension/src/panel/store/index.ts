@@ -27,6 +27,7 @@ interface PaperStore {
   activeScopeId: string | null;
   overlayEnabled: boolean;
   pickerEnabled: boolean;
+  searchQuery: string;
 
   initialize: () => void;
   refreshSceneTree: () => void;
@@ -41,6 +42,7 @@ interface PaperStore {
   clearHover: () => void;
   setOverlayEnabled: (enabled: boolean) => void;
   togglePicker: () => void;
+  setSearchQuery: (query: string) => void;
 }
 
 let scopeChangeListenerAdded = false;
@@ -64,6 +66,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   activeScopeId: null,
   overlayEnabled: true,
   pickerEnabled: false,
+  searchQuery: '',
 
   initialize: async () => {
     set({ connectionStatus: '正在连接...' });
@@ -297,5 +300,31 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     sendToTab({
       action: nextEnabled ? 'ENABLE_PICKER' : 'DISABLE_PICKER',
     }, () => { });
+  },
+
+  setSearchQuery: (query: string) => {
+    set(state => {
+      const expandedNodes = new Set(state.expandedNodes);
+      if (query) {
+        const collectMatchIds = (node: PaperNode) => {
+          const lowerQuery = query.toLowerCase();
+          const nameMatch = node.name.toLowerCase().includes(lowerQuery);
+          const typeMatch = node.type.toLowerCase().includes(lowerQuery);
+          if (nameMatch || typeMatch) {
+            expandedNodes.add(node.id);
+            const parts = node.id.split('_');
+            for (let i = 1; i < parts.length; i++) {
+              expandedNodes.add(parts.slice(0, i + 1).join('_'));
+            }
+            expandedNodes.add('root');
+          }
+          node.children.forEach(collectMatchIds);
+        };
+        if (state.sceneTree) {
+          collectMatchIds(state.sceneTree);
+        }
+      }
+      return { searchQuery: query, expandedNodes };
+    });
   },
 }));
