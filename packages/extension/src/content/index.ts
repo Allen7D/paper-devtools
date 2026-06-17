@@ -77,6 +77,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'GET_AVAILABLE_SCOPES':
     case 'SET_ACTIVE_SCOPE':
     case 'GET_NODE_INFO':
+    case 'HIGHLIGHT_NODE':
+    case 'CLEAR_HIGHLIGHT':
+    case 'SET_OVERLAY_ENABLED':
       sendToInjectScript(message, sendResponse);
       return true;
 

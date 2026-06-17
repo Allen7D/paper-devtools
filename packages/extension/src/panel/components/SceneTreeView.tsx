@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Button, Select, Tag } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Button, Select, Tag, Tooltip } from 'antd';
+import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
 import { usePaperStore } from '../store';
 import { TreeNode } from './TreeNode';
@@ -15,6 +15,8 @@ export const SceneTreeView: React.FC = () => {
     availableScopes,
     activeScopeId,
     setActiveScope,
+    overlayEnabled,
+    setOverlayEnabled,
   } = usePaperStore();
 
   useEffect(() => {
@@ -58,6 +60,14 @@ export const SceneTreeView: React.FC = () => {
             {availableScopes[0].canvasId || availableScopes[0].id}
           </span>
         )}
+        <Tooltip title={overlayEnabled ? '关闭高亮覆盖层' : '开启高亮覆盖层'}>
+          <Button
+            onClick={() => setOverlayEnabled(!overlayEnabled)}
+            icon={overlayEnabled ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+            size="small"
+            type={overlayEnabled ? 'primary' : 'default'}
+          />
+        </Tooltip>
         <Button onClick={refreshSceneTree} icon={<ReloadOutlined />} size="small" />
       </div>
       <div className="scene-tree-content">

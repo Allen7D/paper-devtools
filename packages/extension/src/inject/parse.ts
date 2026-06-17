@@ -1,7 +1,6 @@
 import { extractItemProperties, extractProjectProperties } from "./extra";
 import { ScopeProjectNode, ScopeTreeNode } from "types";
 
-
 function buildScopeProject(project: paper.Project) {
   const nodeId = "root";
   const node: ScopeProjectNode = {
@@ -26,16 +25,9 @@ function buildScopeProject(project: paper.Project) {
   return node;
 }
 
-/**
- * 递归构建作用域的图元树
- * @param {paper.Item} item 
- * @param id 
- * @returns 
- */
 function buildScopeTree(item: paper.Item, id = "") {
   const nodeId = id;
 
-  // 构建基本节点信息
   let node: ScopeTreeNode = {
     id: nodeId,
     name: item.name || "",
@@ -46,10 +38,7 @@ function buildScopeTree(item: paper.Item, id = "") {
     selected: item.selected ?? false,
   };
 
-
-  // 添加属性 - 根据对象类型处理
   node.properties = extractItemProperties(item);
-  // 处理子项 - 根据对象类型获取子项
   let children = item.children;
 
   if (children && children.length > 0) {
@@ -111,7 +100,173 @@ function findPaperItemById(id: string): paper.Item | null {
   }
   return current;
 }
-// 监听来自内容脚本的消息
+
+let selectedOverlay: HTMLDivElement | null = null;
+let hoverOverlay: HTMLDivElement | null = null;
+let overlayContainer: HTMLDivElement | null = null;
+let highlightedNodeId: string | null = null;
+let hoveredNodeId: string | null = null;
+let overlayEnabled = true;
+
+function getOverlayContainer(): HTMLDivElement {
+  if (overlayContainer && overlayContainer.parentNode) {
+    return overlayContainer;
+  }
+
+  overlayContainer = document.createElement('div');
+  overlayContainer.id = '__paper_devtools_overlay_container__';
+  overlayContainer.style.cssText =
+    'position:absolute;pointer-events:none;z-index:99999;top:0;left:0;width:100%;height:100%;overflow:hidden;';
+
+  const project = getActiveProject();
+  const canvas = project?.view?.element as HTMLCanvasElement | undefined;
+  if (canvas && canvas.parentNode) {
+    const parent = canvas.parentNode as HTMLElement;
+    if (getComputedStyle(parent).position === 'static') {
+      parent.style.position = 'relative';
+    }
+    parent.insertBefore(overlayContainer, canvas.nextSibling);
+  }
+
+  return overlayContainer;
+}
+
+function getItemScreenBounds(item: paper.Item): { left: number; top: number; width: number; height: number } | null {
+  const view = getActiveView();
+  const canvas = view?.element as HTMLCanvasElement | undefined;
+  if (!canvas || !item.bounds) return null;
+
+  const canvasRect = canvas.getBoundingClientRect();
+  const bounds = item.bounds;
+
+  const scaleX = canvasRect.width / (canvas.offsetWidth || 1);
+  const scaleY = canvasRect.height / (canvas.offsetHeight || 1);
+
+  return {
+    left: canvasRect.left + bounds.x * scaleX,
+    top: canvasRect.top + bounds.y * scaleY,
+    width: bounds.width * scaleX,
+    height: bounds.height * scaleY,
+  };
+}
+
+function positionOverlay(overlay: HTMLDivElement, item: paper.Item) {
+  const screenBounds = getItemScreenBounds(item);
+  if (!screenBounds) {
+    overlay.style.display = 'none';
+    return;
+  }
+
+  const container = getOverlayContainer();
+  const containerRect = container.getBoundingClientRect();
+
+  overlay.style.display = 'block';
+  overlay.style.left = (screenBounds.left - containerRect.left) + 'px';
+  overlay.style.top = (screenBounds.top - containerRect.top) + 'px';
+  overlay.style.width = screenBounds.width + 'px';
+  overlay.style.height = screenBounds.height + 'px';
+}
+
+function createOverlayElement(type: 'selected' | 'hover'): HTMLDivElement {
+  const el = document.createElement('div');
+  el.className = `__paper_devtools_overlay_${type}__`;
+
+  if (type === 'selected') {
+    el.style.cssText =
+      'position:absolute;pointer-events:none;border:2px solid rgba(245,80,60,0.9);background:rgba(245,80,60,0.08);border-radius:2px;transition:left 0.05s,top 0.05s,width 0.05s,height 0.05s;display:none;';
+  } else {
+    el.style.cssText =
+      'position:absolute;pointer-events:none;border:1.5px dashed rgba(66,133,244,0.8);background:rgba(66,133,244,0.06);border-radius:2px;transition:left 0.05s,top 0.05s,width 0.05s,height 0.05s;display:none;';
+  }
+
+  getOverlayContainer().appendChild(el);
+  return el;
+}
+
+function updateOverlayPosition(type: 'selected' | 'hover', nodeId: string) {
+  const item = findPaperItemById(nodeId);
+  if (!item) return;
+
+  const overlay = type === 'selected' ? selectedOverlay : hoverOverlay;
+  if (!overlay) return;
+
+  positionOverlay(overlay, item);
+}
+
+function syncAllOverlays() {
+  if (!overlayEnabled) return;
+  if (highlightedNodeId) updateOverlayPosition('selected', highlightedNodeId);
+  if (hoveredNodeId) updateOverlayPosition('hover', hoveredNodeId);
+}
+
+function showHighlight(nodeId: string, type: 'selected' | 'hover') {
+  if (!overlayEnabled) return;
+
+  const item = findPaperItemById(nodeId);
+  if (!item) return;
+
+  if (type === 'selected') {
+    if (!selectedOverlay) selectedOverlay = createOverlayElement('selected');
+    positionOverlay(selectedOverlay, item);
+    highlightedNodeId = nodeId;
+  } else {
+    if (!hoverOverlay) hoverOverlay = createOverlayElement('hover');
+    positionOverlay(hoverOverlay, item);
+    hoveredNodeId = nodeId;
+  }
+}
+
+function hideHighlight(type: 'selected' | 'hover') {
+  if (type === 'selected' && selectedOverlay) {
+    selectedOverlay.style.display = 'none';
+    highlightedNodeId = null;
+  }
+  if (type === 'hover' && hoverOverlay) {
+    hoverOverlay.style.display = 'none';
+    hoveredNodeId = null;
+  }
+}
+
+function clearAllOverlays() {
+  if (selectedOverlay) {
+    selectedOverlay.remove();
+    selectedOverlay = null;
+  }
+  if (hoverOverlay) {
+    hoverOverlay.remove();
+    hoverOverlay = null;
+  }
+  if (overlayContainer) {
+    overlayContainer.remove();
+    overlayContainer = null;
+  }
+  highlightedNodeId = null;
+  hoveredNodeId = null;
+}
+
+function setOverlayEnabled(enabled: boolean) {
+  overlayEnabled = enabled;
+  if (!enabled) {
+    clearAllOverlays();
+  }
+}
+
+window.addEventListener('PAPER_SCENE_CHANGED', () => {
+  syncAllOverlays();
+});
+
+window.addEventListener('resize', () => {
+  syncAllOverlays();
+});
+
+window.addEventListener('scroll', () => {
+  syncAllOverlays();
+}, true);
+
+window.addEventListener('PAPER_SCOPE_CHANGE', () => {
+  clearAllOverlays();
+});
+
 window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
   const message = (event as any).detail;
   if (!message || !message.action) return;
@@ -134,14 +289,12 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
           if (project) {
             project.deselectAll();
           }
-          // 选择当前项目
           if (item.selected !== undefined) {
             item.selected = true;
           }
-          // 构建节点信息
-          console.log("Click:", item);
           const node = buildScopeTree(item, message.nodeId);
           response = { node };
+          showHighlight(message.nodeId, 'selected');
         }
       }
       break;
@@ -163,7 +316,6 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         const item = findPaperItemById(message.nodeId);
         if (item) {
           try {
-            console.log("Update Property:", message.property, message.value);
             if (
               message.property === "position" &&
               typeof message.value === "object"
@@ -220,8 +372,21 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         }
       }
       break;
+    case "HIGHLIGHT_NODE":
+      if (message.nodeId) {
+        showHighlight(message.nodeId, message.type || 'selected');
+        response = { success: true };
+      }
+      break;
+    case "CLEAR_HIGHLIGHT":
+      hideHighlight(message.type || 'hover');
+      response = { success: true };
+      break;
+    case "SET_OVERLAY_ENABLED":
+      setOverlayEnabled(message.enabled);
+      response = { success: true };
+      break;
   }
-  // 发送响应
   if (response) {
     window.dispatchEvent(
       new CustomEvent("PAPER_DEVTOOLS_RESPONSE", {
