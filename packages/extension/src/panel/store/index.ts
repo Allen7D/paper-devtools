@@ -30,6 +30,7 @@ interface PaperStore {
   searchQuery: string;
   typeFilter: string[];
   visibilityFilter: 'all' | 'visible' | 'hidden';
+  autoSwitchScope: boolean;
 
   initialize: () => void;
   refreshSceneTree: () => void;
@@ -47,6 +48,7 @@ interface PaperStore {
   setSearchQuery: (query: string) => void;
   setTypeFilter: (types: string[]) => void;
   setVisibilityFilter: (filter: 'all' | 'visible' | 'hidden') => void;
+  setAutoSwitchScope: (enabled: boolean) => void;
 }
 
 let scopeChangeListenerAdded = false;
@@ -73,6 +75,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   searchQuery: '',
   typeFilter: [],
   visibilityFilter: 'all',
+  autoSwitchScope: true,
 
   initialize: async () => {
     set({ connectionStatus: '正在连接...' });
@@ -340,5 +343,13 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
 
   setVisibilityFilter: (filter: 'all' | 'visible' | 'hidden') => {
     set({ visibilityFilter: filter });
+  },
+
+  setAutoSwitchScope: (enabled: boolean) => {
+    set({ autoSwitchScope: enabled });
+    sendToTab({
+      action: 'SET_AUTO_SWITCH_SCOPE',
+      enabled,
+    }, () => { });
   },
 }));

@@ -108,6 +108,8 @@ let highlightedNodeId: string | null = null;
 let hoveredNodeId: string | null = null;
 let overlayEnabled = true;
 let pickerActive = false;
+let autoSwitchScope = true;
+let canvasClickHandlers = new WeakMap<HTMLCanvasElement, (e: MouseEvent) => void>();
 let pickerMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 let pickerClickHandler: ((e: MouseEvent) => void) | null = null;
 
@@ -254,6 +256,35 @@ function setOverlayEnabled(enabled: boolean) {
   }
 }
 
+function setupCanvasClickListeners() {
+  if (!window.__PAPER_SCOPES__) return;
+
+  for (const [scopeId, data] of window.__PAPER_SCOPES__.scopes) {
+    const canvas = data.canvas as HTMLCanvasElement;
+    if (!canvas || canvasClickHandlers.has(canvas)) continue;
+
+    const handler = () => {
+      if (!autoSwitchScope) return;
+      if (pickerActive) return;
+
+      const currentActive = window.__PAPER_SCOPES__?.activeScope;
+      if (currentActive === scopeId) return;
+
+      window.__PAPER_SCOPES__?.switchScope(scopeId);
+    };
+
+    canvas.addEventListener('click', handler);
+    canvasClickHandlers.set(canvas, handler);
+  }
+}
+
+function setAutoSwitchScope(enabled: boolean) {
+  autoSwitchScope = enabled;
+  if (enabled) {
+    setupCanvasClickListeners();
+  }
+}
+
 function findNodeIdByItem(targetItem: paper.Item): string | null {
   const project = getActiveProject();
   if (!project) return null;
@@ -395,6 +426,9 @@ window.addEventListener('scroll', () => {
 
 window.addEventListener('PAPER_SCOPE_CHANGE', () => {
   clearAllOverlays();
+  if (autoSwitchScope) {
+    setupCanvasClickListeners();
+  }
 });
 
 window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
@@ -520,6 +554,13 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
     case "DISABLE_PICKER":
       disablePicker();
       response = { success: true };
+      break;
+    case "SET_AUTO_SWITCH_SCOPE":
+      setAutoSwitchScope(message.enabled);
+      response = { success: true };
+      break;
+    case "GET_AUTO_SWITCH_SCOPE":
+      response = { enabled: autoSwitchScope };
       break;
   }
   if (response) {

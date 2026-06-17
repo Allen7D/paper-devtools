@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Button, Input, Select, Tag, Tooltip } from 'antd';
-import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined, FilterOutlined, SwapOutlined } from '@ant-design/icons';
 
 import { usePaperStore, PaperNode } from '../store';
 import { TreeNode } from './TreeNode';
@@ -86,6 +86,8 @@ export const SceneTreeView: React.FC = () => {
     setTypeFilter,
     visibilityFilter,
     setVisibilityFilter,
+    autoSwitchScope,
+    setAutoSwitchScope,
   } = usePaperStore();
 
   useEffect(() => {
@@ -139,6 +141,14 @@ export const SceneTreeView: React.FC = () => {
             {availableScopes[0].canvasId || availableScopes[0].id}
           </span>
         )}
+        <Tooltip title={autoSwitchScope ? '关闭点击画布自动切换' : '开启点击画布自动切换'}>
+          <Button
+            onClick={() => setAutoSwitchScope(!autoSwitchScope)}
+            icon={<SwapOutlined />}
+            size="small"
+            type={autoSwitchScope ? 'primary' : 'default'}
+          />
+        </Tooltip>
         <Tooltip title={pickerEnabled ? '关闭拾取器' : '拾取器：点击画布选中图元'}>
           <Button
             onClick={togglePicker}

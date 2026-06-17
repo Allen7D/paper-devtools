@@ -82,6 +82,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'SET_OVERLAY_ENABLED':
     case 'ENABLE_PICKER':
     case 'DISABLE_PICKER':
+    case 'SET_AUTO_SWITCH_SCOPE':
+    case 'GET_AUTO_SWITCH_SCOPE':
       sendToInjectScript(message, sendResponse);
       return true;
 
