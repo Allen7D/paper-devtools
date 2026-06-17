@@ -363,6 +363,21 @@ function enablePicker() {
     e.preventDefault();
     e.stopPropagation();
 
+    if (e.ctrlKey || e.metaKey) {
+      if (highlightedNodeId) {
+        const currentItem = findPaperItemById(highlightedNodeId);
+        if (currentItem && currentItem.parent) {
+          const parentItemId = findNodeIdByItem(currentItem.parent);
+          if (parentItemId) {
+            window.dispatchEvent(new CustomEvent('PAPER_PICKER_RESULT', {
+              detail: { nodeId: parentItemId, deselect: false },
+            }));
+          }
+        }
+      }
+      return;
+    }
+
     const point = getCanvasPoint(e);
     if (!point) return;
 
