@@ -471,6 +471,8 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
           const node = buildScopeTree(item, message.nodeId);
           response = { node };
           showHighlight(message.nodeId, 'selected');
+          (window as any).$paper = item;
+          console.log('%c[Paper DevTools]%c 选中图元:', 'color:#f5503c;font-weight:bold', 'color:inherit', item);
         }
       }
       break;
