@@ -26,6 +26,7 @@ interface PaperStore {
   availableScopes: ScopeInfo[];
   activeScopeId: string | null;
   overlayEnabled: boolean;
+  pickerEnabled: boolean;
 
   initialize: () => void;
   refreshSceneTree: () => void;
@@ -39,6 +40,7 @@ interface PaperStore {
   hoverNode: (nodeId: string) => void;
   clearHover: () => void;
   setOverlayEnabled: (enabled: boolean) => void;
+  togglePicker: () => void;
 }
 
 let scopeChangeListenerAdded = false;
@@ -61,6 +63,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   availableScopes: [],
   activeScopeId: null,
   overlayEnabled: true,
+  pickerEnabled: false,
 
   initialize: async () => {
     set({ connectionStatus: '正在连接...' });
@@ -127,6 +130,11 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
         if (message.action === 'SCENE_CHANGE') {
           get().refreshSceneTree();
           get().refreshSelectedNode();
+        }
+
+        if (message.action === 'PICKER_RESULT' && message.nodeId) {
+          set({ pickerEnabled: false });
+          get().selectNode(message.nodeId);
         }
       });
     }
@@ -259,6 +267,15 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     sendToTab({
       action: 'SET_OVERLAY_ENABLED',
       enabled,
+    }, () => { });
+  },
+
+  togglePicker: () => {
+    const { pickerEnabled } = get();
+    const nextEnabled = !pickerEnabled;
+    set({ pickerEnabled: nextEnabled });
+    sendToTab({
+      action: nextEnabled ? 'ENABLE_PICKER' : 'DISABLE_PICKER',
     }, () => { });
   },
 }));

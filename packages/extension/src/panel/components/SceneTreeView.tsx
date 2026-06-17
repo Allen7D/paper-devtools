@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button, Select, Tag, Tooltip } from 'antd';
-import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined } from '@ant-design/icons';
 
 import { usePaperStore } from '../store';
 import { TreeNode } from './TreeNode';
@@ -17,6 +17,8 @@ export const SceneTreeView: React.FC = () => {
     setActiveScope,
     overlayEnabled,
     setOverlayEnabled,
+    pickerEnabled,
+    togglePicker,
   } = usePaperStore();
 
   useEffect(() => {
@@ -60,6 +62,15 @@ export const SceneTreeView: React.FC = () => {
             {availableScopes[0].canvasId || availableScopes[0].id}
           </span>
         )}
+        <Tooltip title={pickerEnabled ? '关闭拾取器' : '拾取器：点击画布选中图元'}>
+          <Button
+            onClick={togglePicker}
+            icon={<AimOutlined />}
+            size="small"
+            type={pickerEnabled ? 'primary' : 'default'}
+            danger={pickerEnabled}
+          />
+        </Tooltip>
         <Tooltip title={overlayEnabled ? '关闭高亮覆盖层' : '开启高亮覆盖层'}>
           <Button
             onClick={() => setOverlayEnabled(!overlayEnabled)}

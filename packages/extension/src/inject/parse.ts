@@ -107,6 +107,9 @@ let overlayContainer: HTMLDivElement | null = null;
 let highlightedNodeId: string | null = null;
 let hoveredNodeId: string | null = null;
 let overlayEnabled = true;
+let pickerActive = false;
+let pickerMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+let pickerClickHandler: ((e: MouseEvent) => void) | null = null;
 
 function getOverlayContainer(): HTMLDivElement {
   if (overlayContainer && overlayContainer.parentNode) {
@@ -251,6 +254,135 @@ function setOverlayEnabled(enabled: boolean) {
   }
 }
 
+function findNodeIdByItem(targetItem: paper.Item): string | null {
+  const project = getActiveProject();
+  if (!project) return null;
+
+  function search(item: any, id: string): string | null {
+    if (item === targetItem) return id;
+
+    const isProject =
+      item.className === "Project" ||
+      (item.activeLayer && item.layers);
+
+    const children = isProject ? item.layers : item.children;
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
+        const result = search(children[i], `${id}_${i}`);
+        if (result) return result;
+      }
+    }
+    return null;
+  }
+
+  return search(project, "root");
+}
+
+function getCanvasPoint(e: MouseEvent): any | null {
+  const scope = getActiveScope();
+  const view = getActiveView();
+  const canvas = view?.element as HTMLCanvasElement | undefined;
+  if (!canvas || !scope) return null;
+
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.offsetWidth / rect.width;
+  const scaleY = canvas.offsetHeight / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  return new scope.Point(x, y);
+}
+
+function enablePicker() {
+  if (pickerActive) return;
+  pickerActive = true;
+
+  const view = getActiveView();
+  const canvas = view?.element as HTMLCanvasElement | undefined;
+  if (!canvas) return;
+
+  canvas.style.cursor = 'crosshair';
+
+  pickerMouseMoveHandler = (e: MouseEvent) => {
+    const point = getCanvasPoint(e);
+    if (!point) return;
+
+    const project = getActiveProject();
+    if (!project) return;
+
+    const hitResult = project.hitTest(point, {
+      fill: true,
+      stroke: true,
+      segments: true,
+      tolerance: 5,
+    });
+
+    if (hitResult && hitResult.item) {
+      const nodeId = findNodeIdByItem(hitResult.item);
+      if (nodeId) {
+        showHighlight(nodeId, 'hover');
+      }
+    } else {
+      hideHighlight('hover');
+    }
+  };
+
+  pickerClickHandler = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const point = getCanvasPoint(e);
+    if (!point) return;
+
+    const project = getActiveProject();
+    if (!project) return;
+
+    const hitResult = project.hitTest(point, {
+      fill: true,
+      stroke: true,
+      segments: true,
+      tolerance: 5,
+    });
+
+    if (hitResult && hitResult.item) {
+      const nodeId = findNodeIdByItem(hitResult.item);
+      if (nodeId) {
+        window.dispatchEvent(new CustomEvent('PAPER_PICKER_RESULT', {
+          detail: { nodeId },
+        }));
+      }
+    }
+
+    disablePicker();
+  };
+
+  canvas.addEventListener('mousemove', pickerMouseMoveHandler);
+  canvas.addEventListener('click', pickerClickHandler, true);
+}
+
+function disablePicker() {
+  if (!pickerActive) return;
+  pickerActive = false;
+
+  const view = getActiveView();
+  const canvas = view?.element as HTMLCanvasElement | undefined;
+  if (!canvas) return;
+
+  canvas.style.cursor = '';
+
+  if (pickerMouseMoveHandler) {
+    canvas.removeEventListener('mousemove', pickerMouseMoveHandler);
+    pickerMouseMoveHandler = null;
+  }
+  if (pickerClickHandler) {
+    canvas.removeEventListener('click', pickerClickHandler, true);
+    pickerClickHandler = null;
+  }
+
+  hideHighlight('hover');
+}
+
 window.addEventListener('PAPER_SCENE_CHANGED', () => {
   syncAllOverlays();
 });
@@ -384,6 +516,14 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
       break;
     case "SET_OVERLAY_ENABLED":
       setOverlayEnabled(message.enabled);
+      response = { success: true };
+      break;
+    case "ENABLE_PICKER":
+      enablePicker();
+      response = { success: true };
+      break;
+    case "DISABLE_PICKER":
+      disablePicker();
       response = { success: true };
       break;
   }

@@ -80,6 +80,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'HIGHLIGHT_NODE':
     case 'CLEAR_HIGHLIGHT':
     case 'SET_OVERLAY_ENABLED':
+    case 'ENABLE_PICKER':
+    case 'DISABLE_PICKER':
       sendToInjectScript(message, sendResponse);
       return true;
 
@@ -108,6 +110,20 @@ window.addEventListener('PAPER_SCOPE_CHANGE', ((event: CustomEvent) => {
 window.addEventListener('PAPER_SCENE_CHANGED', (() => {
   try {
     chrome.runtime.sendMessage({ action: 'SCENE_CHANGE' });
+  } catch {
+    // Panel may not be open
+  }
+}) as EventListener);
+
+window.addEventListener('PAPER_PICKER_RESULT', ((event: CustomEvent) => {
+  const detail = event.detail;
+  if (!detail) return;
+
+  try {
+    chrome.runtime.sendMessage({
+      action: 'PICKER_RESULT',
+      nodeId: detail.nodeId,
+    });
   } catch {
     // Panel may not be open
   }
