@@ -22,14 +22,15 @@ function filterTree(node: PaperNode, options: FilterOptions): PaperNode | null {
   if (!hasSearch && !hasTypeFilter && !hasVisibilityFilter) return node;
 
   const lowerQuery = searchQuery.toLowerCase();
-  const nameMatch = !hasSearch || node.name.toLowerCase().includes(lowerQuery);
-  const typeTextMatch = !hasSearch || node.type.toLowerCase().includes(lowerQuery);
+  const textMatch = !hasSearch ||
+    node.name.toLowerCase().includes(lowerQuery) ||
+    node.type.toLowerCase().includes(lowerQuery);
   const typeFilterMatch = !hasTypeFilter || typeFilter.includes(node.type);
   const visibilityMatch = !hasVisibilityFilter ||
     (visibilityFilter === 'visible' && node.visible) ||
     (visibilityFilter === 'hidden' && !node.visible);
 
-  const selfMatch = nameMatch && typeTextMatch && typeFilterMatch && visibilityMatch;
+  const selfMatch = textMatch && typeFilterMatch && visibilityMatch;
 
   const filteredChildren = node.children
     .map(child => filterTree(child, options))
