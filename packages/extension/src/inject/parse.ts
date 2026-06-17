@@ -572,6 +572,12 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
       disablePicker();
       response = { success: true };
       break;
+    case "DEVTOOLS_CLEANUP":
+      disablePicker();
+      clearAllOverlays();
+      (window as any).$paper = undefined;
+      response = { success: true };
+      break;
     case "SET_AUTO_SWITCH_SCOPE":
       setAutoSwitchScope(message.enabled);
       response = { success: true };

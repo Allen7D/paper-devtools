@@ -84,6 +84,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'DISABLE_PICKER':
     case 'SET_AUTO_SWITCH_SCOPE':
     case 'GET_AUTO_SWITCH_SCOPE':
+    case 'DEVTOOLS_CLEANUP':
       sendToInjectScript(message, sendResponse);
       return true;
 

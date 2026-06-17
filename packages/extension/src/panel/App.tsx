@@ -12,6 +12,23 @@ const App: React.FC = () => {
     initialize();
   }, [initialize]);
 
+  useEffect(() => {
+    const handleUnload = () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tabId = tabs[0]?.id;
+        if (tabId) {
+          chrome.tabs.sendMessage(tabId, { action: 'DEVTOOLS_CLEANUP' });
+        }
+      });
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+    return () => {
+      handleUnload();
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, []);
+
   return (
     <div className="app-container">
       <div className="app-header">
