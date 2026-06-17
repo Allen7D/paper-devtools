@@ -5,6 +5,7 @@ interface ScopeEntry {
   scope: paper.PaperScope;
   container: HTMLDivElement;
   canvas: HTMLCanvasElement;
+  scopeId: string;
 }
 
 const scopeEntries: ScopeEntry[] = [];
@@ -28,12 +29,10 @@ const drawPaperExample = (
   height: number,
   id: string,
 ): ScopeEntry => {
-  // 创建容器 div
   const container = document.createElement('div');
   container.style.cssText =
     'margin: 20px auto; display: block; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 820px;';
 
-  // 创建 header（含标题和删除按钮）
   const header = document.createElement('div');
   header.style.cssText =
     'display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: #f0f0f0; border-bottom: 1px solid #ddd;';
@@ -58,19 +57,15 @@ const drawPaperExample = (
   header.appendChild(label);
   header.appendChild(deleteBtn);
 
-  // 创建 Canvas
   const canvas = createCanvas(width, height, id);
 
-  // 创建 PaperScope
   const paperScope = new paper.PaperScope();
   paperScope.setup(canvas);
   createShapes(paperScope);
 
-  // 组装容器
   container.appendChild(header);
   container.appendChild(canvas);
 
-  // 插入到"创建画布"按钮之前
   const addBtn = document.getElementById('add-canvas-btn');
   if (addBtn) {
     document.body.insertBefore(container, addBtn);
@@ -78,26 +73,33 @@ const drawPaperExample = (
     document.body.appendChild(container);
   }
 
-  // 创建 entry 并注册（在设置 onclick 前需要 entry 引用）
-  const entry: ScopeEntry = { scope: paperScope, container, canvas };
+  const scopeId = canvas.id || `scope-${canvasIndex}`;
+  const entry: ScopeEntry = { scope: paperScope, container, canvas, scopeId };
   scopeEntries.push(entry);
 
-  // 绑定删除按钮事件
+  globalThis.__PAPER_SCOPES__?.register(scopeId, paperScope, canvas);
+
+  if (!globalThis.__PAPER_SCOPE__) {
+    globalThis.__PAPER_SCOPE__ = {
+      scopeId,
+      paperScope,
+    };
+  }
+
   deleteBtn.onclick = () => removeScope(entry);
 
   return entry;
 };
 
 const removeScope = (entry: ScopeEntry) => {
-  // 清理 PaperScope
+  globalThis.__PAPER_SCOPES__?.unregister(entry.scopeId);
+
   try {
     (entry.scope as any).remove?.();
   } catch (e) {
     /* PaperScope 可能已被销毁 */
   }
-  // 移除 DOM
   entry.container.remove();
-  // 从列表中移除
   const idx = scopeEntries.indexOf(entry);
   if (idx !== -1) scopeEntries.splice(idx, 1);
 };
@@ -120,18 +122,14 @@ const addButton = () => {
   document.body.appendChild(btn);
 };
 
-// 等待 DOM 加载完成
 document.addEventListener('DOMContentLoaded', () => {
-  // 按钮触发添加画布到页面
   addButton();
 
-  // 添加首张画布到页面
   const entry = drawPaperExample(800, 600, 'paper-canvas-0');
   canvasIndex = 1;
 
-  // 兼容初始检测：指向第一个创建的 Scope
   globalThis.__PAPER_SCOPE__ = {
-    scopeId: entry.scope.view.element.id || 'default',
+    scopeId: entry.scopeId,
     paperScope: entry.scope,
   };
 });

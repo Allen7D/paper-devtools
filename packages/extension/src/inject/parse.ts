@@ -163,7 +163,6 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         const item = findPaperItemById(message.nodeId);
         if (item) {
           try {
-            // 处理特殊属性
             console.log("Update Property:", message.property, message.value);
             if (
               message.property === "position" &&
@@ -184,13 +183,32 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
             if (view) {
               view.update();
             }
-            // 构建更新后的节点信息
             const node = buildScopeTree(item, message.nodeId);
             response = { node };
           } catch (error) {
             console.error("更新属性失败:", error);
           }
         }
+      }
+      break;
+    case "GET_AVAILABLE_SCOPES":
+      if (window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.getAllScopes) {
+        const rawScopes = window.__PAPER_SCOPES__.getAllScopes();
+        const scopes = rawScopes.map((item) => ({
+          id: item.id,
+          canvasId: item.canvas?.id || "",
+          active: item.active,
+        }));
+        response = {
+          scopes,
+          activeScopeId: window.__PAPER_SCOPES__.activeScope || null,
+        };
+      }
+      break;
+    case "SET_ACTIVE_SCOPE":
+      if (message.scopeId && window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.switchScope) {
+        const success = window.__PAPER_SCOPES__.switchScope(message.scopeId);
+        response = { success };
       }
       break;
   }

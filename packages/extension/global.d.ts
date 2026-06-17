@@ -11,6 +11,7 @@ interface PaperScopesGlobal {
   scopes: Map<string, PaperScopeData>;
   activeScope: string | null;
   register: (scopeId: string, paperScope: any, canvas: HTMLCanvasElement) => void;
+  unregister: (scopeId: string) => boolean;
   getActiveScope: () => any | null;
   switchScope: (scopeId: string) => boolean;
   getAllScopes: () => Array<{ id: string; canvas: HTMLCanvasElement; active: boolean }>;
