@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { EyeOutlined, EyeInvisibleOutlined, CaretRightOutlined } from '@ant-design/icons';
 import { usePaperStore, PaperNode } from '../store';
 
@@ -22,9 +22,28 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level }) => {
     overlayEnabled
   } = usePaperStore();
 
+  const nodeRef = useRef<HTMLDivElement>(null);
+
   const isExpanded = expandedNodes.has(node.id);
   const isSelected = selectedNode?.id === node.id;
   const isHovered = hoveredNode?.id === node.id;
+
+  useEffect(() => {
+    if (isSelected && nodeRef.current) {
+      const rect = nodeRef.current.getBoundingClientRect();
+      const container = nodeRef.current.closest('.scene-tree-content');
+      if (!container) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const isVisible =
+        rect.top >= containerRect.top &&
+        rect.bottom <= containerRect.bottom;
+
+      if (!isVisible) {
+        nodeRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [isSelected, selectedNode?.id]);
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,6 +78,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level }) => {
   return (
     <div className="tree-node-container">
       <div
+        ref={nodeRef}
         className={`tree-node ${isSelected ? 'selected' : ''} ${isHovered ? 'hovered' : ''}`}
         style={{ '--indent': `${level * 16}px` } as React.CSSProperties}
         onClick={handleSelect}

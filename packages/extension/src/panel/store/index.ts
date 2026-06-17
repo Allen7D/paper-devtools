@@ -167,7 +167,16 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
       nodeId
     }, (response) => {
       if (response && response.node) {
-        set({ selectedNode: response.node });
+        set(state => {
+          const expandedNodes = new Set(state.expandedNodes);
+          const parts = nodeId.split('_');
+          for (let i = 1; i < parts.length; i++) {
+            const ancestorId = parts.slice(0, i + 1).join('_');
+            expandedNodes.add(ancestorId);
+          }
+          expandedNodes.add('root');
+          return { selectedNode: response.node, expandedNodes };
+        });
       }
     });
   },
