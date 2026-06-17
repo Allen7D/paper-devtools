@@ -58,7 +58,7 @@ function sendToInjectScript(message: any, sendResponse: (response: any) => void)
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  console.log('>>> message', message);
+  // console.log('>>> chrome.runtime.onMessage', message);
 
   if (!message || !message.action) return;
 
