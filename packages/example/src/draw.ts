@@ -1,7 +1,7 @@
 
 export function createShapes(paperScope: paper.PaperScope) {
 	// 创建背景 (放在默认图层)
-	paperScope.project.activeLayer.name = 'Default Layer（Init）'
+	paperScope.project.activeLayer.name = 'Default Layer（Init）' + (new Date()).getMilliseconds();
 	const background = new paperScope.Path.Rectangle({
 		point: [0, 0],
 		size: [paperScope.view.size.width, paperScope.view.size.height],
