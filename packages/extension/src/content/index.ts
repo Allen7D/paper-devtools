@@ -123,6 +123,7 @@ window.addEventListener('PAPER_PICKER_RESULT', ((event: CustomEvent) => {
     chrome.runtime.sendMessage({
       action: 'PICKER_RESULT',
       nodeId: detail.nodeId,
+      deselect: detail.deselect || false,
     });
   } catch {
     // Panel may not be open

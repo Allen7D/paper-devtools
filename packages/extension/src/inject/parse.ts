@@ -349,12 +349,10 @@ function enablePicker() {
       const nodeId = findNodeIdByItem(hitResult.item);
       if (nodeId) {
         window.dispatchEvent(new CustomEvent('PAPER_PICKER_RESULT', {
-          detail: { nodeId },
+          detail: { nodeId, deselect: nodeId === highlightedNodeId },
         }));
       }
     }
-
-    disablePicker();
   };
 
   canvas.addEventListener('mousemove', pickerMouseMoveHandler);

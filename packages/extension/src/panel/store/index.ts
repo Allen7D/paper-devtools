@@ -133,8 +133,12 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
         }
 
         if (message.action === 'PICKER_RESULT' && message.nodeId) {
-          set({ pickerEnabled: false });
-          get().selectNode(message.nodeId);
+          if (message.deselect) {
+            set({ selectedNode: null });
+            sendToTab({ action: 'CLEAR_HIGHLIGHT', type: 'selected' }, () => { });
+          } else {
+            get().selectNode(message.nodeId);
+          }
         }
       });
     }
