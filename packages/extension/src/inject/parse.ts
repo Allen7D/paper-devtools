@@ -63,36 +63,43 @@ function buildScopeTree(item: paper.Item, id = "") {
   return node;
 }
 
-// 查找 Paper.js 中的项目
-function findPaperItemById(id: string): paper.Item | null {
-  if (!window.__PAPER_SCOPES__ || !window.__PAPER_SCOPES__.getActiveScope)
+function getActiveScope() {
+  if (!window.__PAPER_SCOPES__ || !window.__PAPER_SCOPES__.getActiveScope) {
     return null;
-
-  const activeScope = window.__PAPER_SCOPES__.getActiveScope();
-  if (!activeScope || !activeScope.project) return null;
-
-  // 如果是根节点
-  if (id === "root") {
-    return activeScope.project;
   }
-  // 解析 ID 路径
-  const parts = id.split("_");
-  let current = activeScope.project;
+  return window.__PAPER_SCOPES__.getActiveScope();
+}
 
-  // 跳过 'root'，从第一个子级开始
+function getActiveProject(): paper.Project | null {
+  const activeScope = getActiveScope();
+  return activeScope && activeScope.project ? activeScope.project : null;
+}
+
+function getActiveView(): paper.View | null {
+  const activeScope = getActiveScope();
+  return activeScope && activeScope.view ? activeScope.view : null;
+}
+
+function findPaperItemById(id: string): paper.Item | null {
+  const project = getActiveProject();
+  if (!project) return null;
+
+  if (id === "root") {
+    return project as unknown as paper.Item;
+  }
+  const parts = id.split("_");
+  let current: any = project;
+
   for (let i = 1; i < parts.length; i++) {
     const index = parseInt(parts[i], 10);
     let children = null;
 
-    // 根据当前对象类型获取子项
     const isProject =
       current.className === "Project" ||
       (current.activeLayer && current.layers);
     if (isProject) {
-      // Project 对象：使用所有 layers
       children = current.layers;
     } else {
-      // 普通 Item 对象：使用 children 属性
       children = current.children;
     }
 
@@ -111,10 +118,10 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
   let response = null;
   switch (message.action) {
     case "GET_SCENE_TREE":
-      if (window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.getActiveScope) {
-        const activeScope = window.__PAPER_SCOPES__.getActiveScope();
-        if (activeScope && activeScope.project) {
-          const sceneTree = buildScopeProject(activeScope.project);
+      {
+        const project = getActiveProject();
+        if (project) {
+          const sceneTree = buildScopeProject(project);
           response = { sceneTree };
         }
       }
@@ -123,15 +130,9 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
       if (message.nodeId) {
         const item = findPaperItemById(message.nodeId);
         if (item) {
-          // 取消所有选择
-          if (
-            window.__PAPER_SCOPES__ &&
-            window.__PAPER_SCOPES__.getActiveScope
-          ) {
-            const activeScope = window.__PAPER_SCOPES__.getActiveScope();
-            if (activeScope && activeScope.project) {
-              activeScope.project.deselectAll();
-            }
+          const project = getActiveProject();
+          if (project) {
+            project.deselectAll();
           }
           // 选择当前项目
           if (item.selected !== undefined) {
@@ -149,16 +150,10 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         const item = findPaperItemById(message.nodeId);
         if (item && item.visible !== undefined) {
           item.visible = !item.visible;
-          // 重新构建作用域树
-          if (
-            window.__PAPER_SCOPES__ &&
-            window.__PAPER_SCOPES__.getActiveScope
-          ) {
-            const activeScope = window.__PAPER_SCOPES__.getActiveScope();
-            if (activeScope && activeScope.project) {
-              const sceneTree = buildScopeProject(activeScope.project);
-              response = { sceneTree };
-            }
+          const project = getActiveProject();
+          if (project) {
+            const sceneTree = buildScopeProject(project);
+            response = { sceneTree };
           }
         }
       }
@@ -185,15 +180,9 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
                 [message.property]: message.value
               });
             }
-            // 如果有视图，重绘
-            if (
-              window.__PAPER_SCOPES__ &&
-              window.__PAPER_SCOPES__.getActiveScope
-            ) {
-              const activeScope = window.__PAPER_SCOPES__.getActiveScope();
-              if (activeScope && activeScope.view) {
-                activeScope.view.update();
-              }
+            const view = getActiveView();
+            if (view) {
+              view.update();
             }
             // 构建更新后的节点信息
             const node = buildScopeTree(item, message.nodeId);
