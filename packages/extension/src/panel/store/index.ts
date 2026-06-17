@@ -33,6 +33,7 @@ interface PaperStore {
   updateNodeProperty: (nodeId: string, property: string, value: any) => void;
   getAvailableScopes: () => void;
   setActiveScope: (scopeId: string) => void;
+  refreshSelectedNode: () => void;
 }
 
 let scopeChangeListenerAdded = false;
@@ -107,6 +108,11 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
             });
             get().refreshSceneTree();
           }
+        }
+
+        if (message.action === 'SCENE_CHANGE') {
+          get().refreshSceneTree();
+          get().refreshSelectedNode();
         }
       });
     }
@@ -228,6 +234,25 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
             selectedNode: null,
           });
           get().refreshSceneTree();
+        }
+      });
+    });
+  },
+
+  refreshSelectedNode: () => {
+    const { selectedNode } = get();
+    if (!selectedNode) return;
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tabId = tabs[0]?.id;
+      if (!tabId) return;
+
+      chrome.tabs.sendMessage(tabId, {
+        action: 'GET_NODE_INFO',
+        nodeId: selectedNode.id,
+      }, (response) => {
+        if (response && response.node) {
+          set({ selectedNode: response.node });
         }
       });
     });

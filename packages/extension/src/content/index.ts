@@ -76,6 +76,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'UPDATE_NODE_PROPERTY':
     case 'GET_AVAILABLE_SCOPES':
     case 'SET_ACTIVE_SCOPE':
+    case 'GET_NODE_INFO':
       sendToInjectScript(message, sendResponse);
       return true;
 
@@ -96,6 +97,14 @@ window.addEventListener('PAPER_SCOPE_CHANGE', ((event: CustomEvent) => {
       scopes: detail.scopes,
       activeScopeId: detail.activeScopeId,
     });
+  } catch {
+    // Panel may not be open
+  }
+}) as EventListener);
+
+window.addEventListener('PAPER_SCENE_CHANGED', (() => {
+  try {
+    chrome.runtime.sendMessage({ action: 'SCENE_CHANGE' });
   } catch {
     // Panel may not be open
   }

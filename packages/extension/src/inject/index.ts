@@ -3,9 +3,37 @@
 (function () {
   const MAX_TRIES = 10;
   const POLLING_INTERVAL_MS = 1000;
+  const SCENE_CHANGE_THROTTLE_MS = 200;
 
   let paperPollingInterval: number | undefined;
   let tryCount = 0;
+  let sceneChangeTimer: number | undefined;
+
+  function dispatchSceneChange() {
+    if (sceneChangeTimer) return;
+    sceneChangeTimer = window.setTimeout(() => {
+      sceneChangeTimer = undefined;
+      window.dispatchEvent(new CustomEvent('PAPER_SCENE_CHANGED'));
+    }, SCENE_CHANGE_THROTTLE_MS);
+  }
+
+  function proxyViewUpdate(paperScope: any) {
+    const view = paperScope?.view;
+    if (!view || !view.update) return;
+
+    const originalUpdate = view.update.bind(view);
+    let proxied = false;
+
+    view.update = function () {
+      const result = originalUpdate();
+      if (!proxied) {
+        proxied = true;
+        dispatchSceneChange();
+        window.setTimeout(() => { proxied = false; }, SCENE_CHANGE_THROTTLE_MS);
+      }
+      return result;
+    };
+  }
 
   function dispatchScopeChange(type: string, scopeId: string) {
     window.dispatchEvent(
@@ -15,10 +43,10 @@
           scopeId,
           scopes: globalThis.__PAPER_SCOPES__
             ? globalThis.__PAPER_SCOPES__.getAllScopes().map((s) => ({
-                id: s.id,
-                canvasId: s.canvas?.id || '',
-                active: s.active,
-              }))
+              id: s.id,
+              canvasId: s.canvas?.id || '',
+              active: s.active,
+            }))
             : [],
           activeScopeId: globalThis.__PAPER_SCOPES__?.activeScope || null,
         },
@@ -44,6 +72,7 @@
           this.activeScope = scopeId;
         }
 
+        proxyViewUpdate(paperScope);
         dispatchScopeChange('added', scopeId);
       },
 

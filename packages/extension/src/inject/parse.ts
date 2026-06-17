@@ -211,6 +211,15 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         response = { success };
       }
       break;
+    case "GET_NODE_INFO":
+      if (message.nodeId) {
+        const item = findPaperItemById(message.nodeId);
+        if (item) {
+          const node = buildScopeTree(item, message.nodeId);
+          response = { node };
+        }
+      }
+      break;
   }
   // 发送响应
   if (response) {

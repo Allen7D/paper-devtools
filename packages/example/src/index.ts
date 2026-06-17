@@ -1,5 +1,5 @@
 import paper from 'paper';
-import { createShapes } from './draw';
+import { createShapes, addRandomShape } from './draw';
 
 interface ScopeEntry {
   scope: paper.PaperScope;
@@ -41,6 +41,22 @@ const drawPaperExample = (
   label.textContent = `Canvas: ${id}`;
   label.style.cssText = 'font-size: 13px; font-weight: 600; color: #333;';
 
+  const actionsDiv = document.createElement('div');
+  actionsDiv.style.cssText = 'display: flex; gap: 8px;';
+
+  const addShapeBtn = document.createElement('button');
+  addShapeBtn.textContent = '＋ 随机图元';
+  addShapeBtn.style.cssText =
+    'padding: 4px 12px; border: 1px solid #1890ff; border-radius: 4px; background: #fff; color: #1890ff; cursor: pointer; font-size: 12px;';
+  addShapeBtn.onmouseenter = () => {
+    addShapeBtn.style.background = '#1890ff';
+    addShapeBtn.style.color = '#fff';
+  };
+  addShapeBtn.onmouseleave = () => {
+    addShapeBtn.style.background = '#fff';
+    addShapeBtn.style.color = '#1890ff';
+  };
+
   const deleteBtn = document.createElement('button');
   deleteBtn.textContent = '✕ 删除';
   deleteBtn.style.cssText =
@@ -54,8 +70,11 @@ const drawPaperExample = (
     deleteBtn.style.color = '#dc3545';
   };
 
+  actionsDiv.appendChild(addShapeBtn);
+  actionsDiv.appendChild(deleteBtn);
+
   header.appendChild(label);
-  header.appendChild(deleteBtn);
+  header.appendChild(actionsDiv);
 
   const canvas = createCanvas(width, height, id);
 
@@ -87,6 +106,8 @@ const drawPaperExample = (
   }
 
   deleteBtn.onclick = () => removeScope(entry);
+
+  addShapeBtn.onclick = () => addRandomShape(entry.scope);
 
   return entry;
 };

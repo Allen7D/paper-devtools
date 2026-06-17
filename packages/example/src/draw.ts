@@ -287,3 +287,157 @@ export function createShapes(paperScope: paper.PaperScope) {
 	// 激活第一个图层作为活动图层
 	geometryLayer.activate();
 }
+
+const SHAPE_COLORS = [
+	'#ff6b6b', '#4ecdc4', '#ffe66d', '#a855f7', '#6f42c1',
+	'#fd7e14', '#20c997', '#e83e8c', '#17a2b8', '#28a745',
+	'#dc3545', '#ffc107', '#495057', '#ff85a2', '#36cfc9',
+];
+
+const SHAPE_NAMES = [
+	'Circle', 'Rectangle', 'Ellipse', 'Star', 'Polygon',
+	'Triangle', 'RoundedRect', 'Line', 'Group', 'Text',
+];
+
+function randomColor(paperScope: paper.PaperScope): string {
+	return SHAPE_COLORS[Math.floor(Math.random() * SHAPE_COLORS.length)];
+}
+
+function randomRange(min: number, max: number): number {
+	return min + Math.random() * (max - min);
+}
+
+export function addRandomShape(paperScope: paper.PaperScope) {
+	const viewWidth = paperScope.view.size.width;
+	const viewHeight = paperScope.view.size.height;
+	const shapeIndex = Math.floor(Math.random() * 10);
+	const fillColor = randomColor(paperScope);
+	const strokeColor = randomColor(paperScope);
+	const cx = randomRange(60, viewWidth - 60);
+	const cy = randomRange(60, viewHeight - 60);
+	const name = SHAPE_NAMES[shapeIndex] + '-' + Date.now().toString(36);
+
+	let item: paper.Item;
+
+	switch (shapeIndex) {
+		case 0: {
+			item = new paperScope.Path.Circle({
+				center: [cx, cy],
+				radius: randomRange(15, 50),
+				fillColor,
+				strokeColor,
+				strokeWidth: 2,
+			});
+			break;
+		}
+		case 1: {
+			item = new paperScope.Path.Rectangle({
+				point: [cx - 30, cy - 25],
+				size: [randomRange(40, 100), randomRange(30, 80)],
+				fillColor,
+				strokeColor,
+				strokeWidth: 2,
+			});
+			break;
+		}
+		case 2: {
+			item = new paperScope.Path.Ellipse({
+				point: [cx - 40, cy - 25],
+				size: [randomRange(50, 120), randomRange(30, 70)],
+				fillColor,
+				strokeColor,
+				strokeWidth: 2,
+			});
+			break;
+		}
+		case 3: {
+			const points = Math.floor(randomRange(5, 9));
+			item = new paperScope.Path.Star({
+				center: [cx, cy],
+				points,
+				radius1: randomRange(20, 40),
+				radius2: randomRange(10, 20),
+				fillColor,
+				strokeColor,
+				strokeWidth: 2,
+			});
+			break;
+		}
+		case 4: {
+			item = new paperScope.Path.RegularPolygon({
+				center: [cx, cy],
+				sides: Math.floor(randomRange(3, 9)),
+				radius: randomRange(20, 45),
+				fillColor,
+				strokeColor,
+				strokeWidth: 2,
+			});
+			break;
+		}
+		case 5: {
+			const size = randomRange(25, 55);
+			item = new paperScope.Path([
+				[cx, cy - size],
+				[cx + size, cy + size],
+				[cx - size, cy + size],
+			]);
+			(item as paper.Path).fillColor = new paperScope.Color(fillColor);
+			(item as paper.Path).strokeColor = new paperScope.Color(strokeColor);
+			(item as paper.Path).strokeWidth = 2;
+			(item as paper.Path).closed = true;
+			break;
+		}
+		case 6: {
+			item = new paperScope.Path.Rectangle({
+				point: [cx - 35, cy - 30],
+				size: [randomRange(50, 90), randomRange(40, 70)],
+				radius: randomRange(8, 20),
+				fillColor,
+				strokeColor,
+				strokeWidth: 2,
+			});
+			break;
+		}
+		case 7: {
+			const angle = randomRange(0, Math.PI * 2);
+			const len = randomRange(40, 100);
+			item = new paperScope.Path.Line({
+				from: [cx, cy],
+				to: [cx + Math.cos(angle) * len, cy + Math.sin(angle) * len],
+				strokeColor: fillColor,
+				strokeWidth: randomRange(2, 6),
+				strokeCap: 'round',
+			});
+			break;
+		}
+		case 8: {
+			const group = new paperScope.Group();
+			const count = Math.floor(randomRange(2, 5));
+			for (let i = 0; i < count; i++) {
+				const child = new paperScope.Path.Circle({
+					center: [cx + i * 20, cy + (i % 2) * 15],
+					radius: randomRange(8, 18),
+					fillColor: randomColor(paperScope),
+				});
+				child.name = `Child ${i + 1}`;
+				group.addChild(child);
+			}
+			item = group;
+			break;
+		}
+		default: {
+			item = new paperScope.PointText({
+				point: [cx, cy],
+				content: SHAPE_NAMES[Math.floor(Math.random() * SHAPE_NAMES.length)],
+				fillColor,
+				fontFamily: 'Arial',
+				fontSize: randomRange(12, 28),
+				fontWeight: Math.random() > 0.5 ? 'bold' : 'normal',
+			});
+			break;
+		}
+	}
+
+	item.name = name;
+	paperScope.project.activeLayer.addChild(item);
+}
