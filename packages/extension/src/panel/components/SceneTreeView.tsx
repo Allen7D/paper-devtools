@@ -168,16 +168,6 @@ export const SceneTreeView: React.FC = () => {
         </Tooltip>
         <Button onClick={refreshSceneTree} icon={<ReloadOutlined />} size="small" />
       </div>
-      <div className="scene-tree-search">
-        <Input
-          placeholder="搜索节点名称或类型..."
-          prefix={<SearchOutlined />}
-          allowClear
-          size="small"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
       <div className="scene-tree-filters">
         <Select
           className="type-filter"
@@ -192,17 +182,25 @@ export const SceneTreeView: React.FC = () => {
           onChange={setTypeFilter}
           options={nodeTypeOptions}
         />
-        <Select
-          className="visibility-filter"
+        <Input
+          className="search-input"
+          placeholder="搜索节点名称或类型..."
+          prefix={<SearchOutlined />}
+          allowClear
           size="small"
-          value={visibilityFilter}
-          onChange={setVisibilityFilter}
-          options={[
-            { label: '全部', value: 'all' },
-            { label: '可见', value: 'visible' },
-            { label: '隐藏', value: 'hidden' },
-          ]}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <span
+          className={`visibility-toggle ${visibilityFilter}`}
+          onClick={() => {
+            const next = visibilityFilter === 'all' ? 'visible' : visibilityFilter === 'visible' ? 'hidden' : 'all';
+            setVisibilityFilter(next);
+          }}
+          title={visibilityFilter === 'all' ? '显示全部节点' : visibilityFilter === 'visible' ? '仅显示可见节点' : '仅显示隐藏节点'}
+        >
+          {visibilityFilter === 'all' ? '全' : visibilityFilter === 'visible' ? '显' : '隐'}
+        </span>
       </div>
       <div className="scene-tree-content">
         {filteredTree ? (
