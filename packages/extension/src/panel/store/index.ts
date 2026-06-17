@@ -28,6 +28,8 @@ interface PaperStore {
   overlayEnabled: boolean;
   pickerEnabled: boolean;
   searchQuery: string;
+  typeFilter: string[];
+  visibilityFilter: 'all' | 'visible' | 'hidden';
 
   initialize: () => void;
   refreshSceneTree: () => void;
@@ -43,6 +45,8 @@ interface PaperStore {
   setOverlayEnabled: (enabled: boolean) => void;
   togglePicker: () => void;
   setSearchQuery: (query: string) => void;
+  setTypeFilter: (types: string[]) => void;
+  setVisibilityFilter: (filter: 'all' | 'visible' | 'hidden') => void;
 }
 
 let scopeChangeListenerAdded = false;
@@ -67,6 +71,8 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   overlayEnabled: true,
   pickerEnabled: false,
   searchQuery: '',
+  typeFilter: [],
+  visibilityFilter: 'all',
 
   initialize: async () => {
     set({ connectionStatus: '正在连接...' });
@@ -326,5 +332,13 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
       }
       return { searchQuery: query, expandedNodes };
     });
+  },
+
+  setTypeFilter: (types: string[]) => {
+    set({ typeFilter: types });
+  },
+
+  setVisibilityFilter: (filter: 'all' | 'visible' | 'hidden') => {
+    set({ visibilityFilter: filter });
   },
 }));

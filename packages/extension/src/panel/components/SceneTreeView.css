@@ -30,7 +30,20 @@
   gap: 4px;
 }
 .scene-tree-container .scene-tree-search {
+  padding: 6px 10px 0;
+}
+.scene-tree-container .scene-tree-filters {
+  display: flex;
+  gap: 6px;
   padding: 6px 10px;
+}
+.scene-tree-container .scene-tree-filters .type-filter {
+  flex: 1;
+  min-width: 0;
+}
+.scene-tree-container .scene-tree-filters .visibility-filter {
+  width: 72px;
+  flex-shrink: 0;
 }
 .scene-tree-container .scene-tree-empty {
   padding: 16px;

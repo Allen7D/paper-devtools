@@ -1,24 +1,41 @@
 import React, { useEffect, useMemo } from 'react';
 import { Button, Input, Select, Tag, Tooltip } from 'antd';
-import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined } from '@ant-design/icons';
+import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined, FilterOutlined } from '@ant-design/icons';
 
 import { usePaperStore, PaperNode } from '../store';
 import { TreeNode } from './TreeNode';
 
 import './SceneTreeView.less';
 
-function filterTree(node: PaperNode, query: string): PaperNode | null {
-  if (!query) return node;
+interface FilterOptions {
+  searchQuery: string;
+  typeFilter: string[];
+  visibilityFilter: 'all' | 'visible' | 'hidden';
+}
 
-  const lowerQuery = query.toLowerCase();
-  const nameMatch = node.name.toLowerCase().includes(lowerQuery);
-  const typeMatch = node.type.toLowerCase().includes(lowerQuery);
+function filterTree(node: PaperNode, options: FilterOptions): PaperNode | null {
+  const { searchQuery, typeFilter, visibilityFilter } = options;
+  const hasSearch = !!searchQuery;
+  const hasTypeFilter = typeFilter.length > 0;
+  const hasVisibilityFilter = visibilityFilter !== 'all';
+
+  if (!hasSearch && !hasTypeFilter && !hasVisibilityFilter) return node;
+
+  const lowerQuery = searchQuery.toLowerCase();
+  const nameMatch = !hasSearch || node.name.toLowerCase().includes(lowerQuery);
+  const typeTextMatch = !hasSearch || node.type.toLowerCase().includes(lowerQuery);
+  const typeFilterMatch = !hasTypeFilter || typeFilter.includes(node.type);
+  const visibilityMatch = !hasVisibilityFilter ||
+    (visibilityFilter === 'visible' && node.visible) ||
+    (visibilityFilter === 'hidden' && !node.visible);
+
+  const selfMatch = nameMatch && typeTextMatch && typeFilterMatch && visibilityMatch;
 
   const filteredChildren = node.children
-    .map(child => filterTree(child, query))
+    .map(child => filterTree(child, options))
     .filter((child): child is PaperNode => child !== null);
 
-  if (nameMatch || typeMatch || filteredChildren.length > 0) {
+  if (selfMatch || filteredChildren.length > 0) {
     return {
       ...node,
       children: filteredChildren,
@@ -26,6 +43,28 @@ function filterTree(node: PaperNode, query: string): PaperNode | null {
   }
 
   return null;
+}
+
+const TYPE_SORT_ORDER: Record<string, number> = {
+  Layer: 0,
+  Group: 1,
+};
+
+function collectNodeTypes(node: PaperNode): string[] {
+  const types = new Set<string>();
+  const walk = (n: PaperNode) => {
+    if (n.type !== 'Project') {
+      types.add(n.type);
+    }
+    n.children.forEach(walk);
+  };
+  walk(node);
+  return Array.from(types).sort((a, b) => {
+    const orderA = TYPE_SORT_ORDER[a] ?? 99;
+    const orderB = TYPE_SORT_ORDER[b] ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.localeCompare(b);
+  });
 }
 
 export const SceneTreeView: React.FC = () => {
@@ -42,6 +81,10 @@ export const SceneTreeView: React.FC = () => {
     togglePicker,
     searchQuery,
     setSearchQuery,
+    typeFilter,
+    setTypeFilter,
+    visibilityFilter,
+    setVisibilityFilter,
   } = usePaperStore();
 
   useEffect(() => {
@@ -50,10 +93,15 @@ export const SceneTreeView: React.FC = () => {
     }
   }, [connected, refreshSceneTree]);
 
+  const nodeTypeOptions = useMemo(() => {
+    if (!sceneTree) return [];
+    return collectNodeTypes(sceneTree).map(type => ({ label: type, value: type }));
+  }, [sceneTree]);
+
   const filteredTree = useMemo(() => {
     if (!sceneTree) return null;
-    return filterTree(sceneTree, searchQuery);
-  }, [sceneTree, searchQuery]);
+    return filterTree(sceneTree, { searchQuery, typeFilter, visibilityFilter });
+  }, [sceneTree, searchQuery, typeFilter, visibilityFilter]);
 
   if (!connected) {
     return <div className="scene-tree-container">等待连接 Paper.js 应用...</div>;
@@ -117,6 +165,32 @@ export const SceneTreeView: React.FC = () => {
           size="small"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+      <div className="scene-tree-filters">
+        <Select
+          className="type-filter"
+          mode="multiple"
+          placeholder="类型过滤"
+          prefix={<FilterOutlined />}
+          allowClear
+          size="small"
+          maxTagCount={2}
+          maxTagPlaceholder={(omitted) => `+${omitted.length}`}
+          value={typeFilter}
+          onChange={setTypeFilter}
+          options={nodeTypeOptions}
+        />
+        <Select
+          className="visibility-filter"
+          size="small"
+          value={visibilityFilter}
+          onChange={setVisibilityFilter}
+          options={[
+            { label: '全部', value: 'all' },
+            { label: '可见', value: 'visible' },
+            { label: '隐藏', value: 'hidden' },
+          ]}
         />
       </div>
       <div className="scene-tree-content">
