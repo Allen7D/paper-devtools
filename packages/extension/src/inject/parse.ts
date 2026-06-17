@@ -419,9 +419,6 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
           if (project) {
             project.deselectAll();
           }
-          if (item.selected !== undefined) {
-            item.selected = true;
-          }
           const node = buildScopeTree(item, message.nodeId);
           response = { node };
           showHighlight(message.nodeId, 'selected');
