@@ -162,6 +162,13 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   },
 
   selectNode: (nodeId: string) => {
+    const { selectedNode } = get();
+    if (selectedNode?.id === nodeId) {
+      set({ selectedNode: null });
+      sendToTab({ action: 'CLEAR_HIGHLIGHT', type: 'selected' }, () => { });
+      return;
+    }
+
     sendToTab({
       action: 'SELECT_NODE',
       nodeId
