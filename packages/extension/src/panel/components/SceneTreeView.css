@@ -10,7 +10,7 @@
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
-  padding: 10px 10px 0 0;
+  padding: 10px 10px 0 10px;
 }
 .scene-tree-container .scene-tree-header .scope-selector {
   flex: 1;
