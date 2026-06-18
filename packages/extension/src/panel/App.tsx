@@ -4,6 +4,7 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 import { SceneTreeView } from './components/SceneTreeView';
 import { PropertiesPanel } from './components/PropertiesPanel';
 import HelpContent from './components/HelpContent';
+import SetupGuide from './components/SetupGuide';
 import { useDevToolsCleanup } from './hooks/useDevToolsCleanup';
 import { usePaperStore } from './store';
 import './App.less';
@@ -31,22 +32,26 @@ const App: React.FC = () => {
         </div>
       </div>
       <div className="app-content">
-        <Splitter>
-          <Splitter.Panel defaultSize="50%" min="20%" max="80%">
-            <div className="scene-panel">
-              <div className="panel-content">
-                <SceneTreeView />
+        {connected ? (
+          <Splitter>
+            <Splitter.Panel defaultSize="50%" min="20%" max="80%">
+              <div className="scene-panel">
+                <div className="panel-content">
+                  <SceneTreeView />
+                </div>
               </div>
-            </div>
-          </Splitter.Panel>
-          <Splitter.Panel defaultSize="50%">
-            <div className="properties-panel">
-              <div className="panel-content">
-                <PropertiesPanel />
+            </Splitter.Panel>
+            <Splitter.Panel defaultSize="50%">
+              <div className="properties-panel">
+                <div className="panel-content">
+                  <PropertiesPanel />
+                </div>
               </div>
-            </div>
-          </Splitter.Panel>
-        </Splitter>
+            </Splitter.Panel>
+          </Splitter>
+        ) : (
+          <SetupGuide />
+        )}
       </div>
       <Modal
         title="Paper.js DevTools 使用说明"
