@@ -53,7 +53,7 @@ const App: React.FC = () => {
         open={helpOpen}
         onCancel={() => setHelpOpen(false)}
         footer={null}
-        width={520}
+        width={740}
       >
         <HelpContent />
       </Modal>
