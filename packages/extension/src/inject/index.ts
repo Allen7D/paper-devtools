@@ -8,6 +8,7 @@
   let paperPollingInterval: number | undefined;
   let tryCount = 0;
   let lastSceneChangeTime = 0;
+  let paperJsDetected = false;
 
   function discoverScopes(): boolean {
     const scopeRef = globalThis.__PAPER_SCOPE__;
@@ -157,11 +158,19 @@
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node instanceof HTMLCanvasElement) {
-            discoverScopes();
+            const discovered = discoverScopes();
+            if (discovered && !paperJsDetected && globalThis.__PAPER_SCOPES__?.getActiveScope()) {
+              paperJsDetected = true;
+              window.dispatchEvent(new CustomEvent('PAPER_JS_DETECTED'));
+            }
           } else if (node instanceof HTMLElement) {
             const canvases = node.querySelectorAll('canvas');
             if (canvases.length > 0) {
-              discoverScopes();
+              const discovered = discoverScopes();
+              if (discovered && !paperJsDetected && globalThis.__PAPER_SCOPES__?.getActiveScope()) {
+                paperJsDetected = true;
+                window.dispatchEvent(new CustomEvent('PAPER_JS_DETECTED'));
+              }
             }
           }
         }
@@ -202,6 +211,7 @@
         const discovered = discoverScopes();
 
         if (discovered && globalThis.__PAPER_SCOPES__?.getActiveScope()) {
+          paperJsDetected = true;
           window.dispatchEvent(new CustomEvent('PAPER_JS_DETECTED'));
           stopPolling();
           return;
