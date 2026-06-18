@@ -30,22 +30,15 @@ const CodeBlock: React.FC<{ code: string }> = ({ code }) => {
 const SetupGuide: React.FC = () => {
   const { connectionStatus } = usePaperStore();
 
-  const manualCode = `// 在 Paper.js 初始化完成后调用：
-window.__PAPER_SCOPE__ = {
-  paperScope: paperScope,   // Paper.js PaperScope 实例
-  scopeId: canvasId,        // Canvas 元素的 id
-};`;
+  const setupCode = `// 引入 paper 模块后，只需一行：
+window.__PAPER_SCOPE__ = paper;`;
 
-  const multiCanvasCode = `// 多画布场景，手动注册每个 Scope：
-const scope1 = new paper.PaperScope();
-scope1.setup(canvas1);
-
-const scope2 = new paper.PaperScope();
-scope2.setup(canvas2);
-
-// 注册到 DevTools
-window.__PAPER_SCOPES__?.register('canvas1', scope1, canvas1);
-window.__PAPER_SCOPES__?.register('canvas2', scope2, canvas2);`;
+  const scriptCode = `<!-- 通过 script 标签引入时 -->
+<script src="paper.js"></script>
+<script>
+  window.__PAPER_SCOPE__ = paper;
+  paper.setup(canvas);
+</script>`;
 
   return (
     <div className="setup-guide">
@@ -58,23 +51,23 @@ window.__PAPER_SCOPES__?.register('canvas2', scope2, canvas2);`;
       </Paragraph>
 
       <div className="setup-tip-box">
-        <h2>自动检测</h2>
+        <h2>自动发现</h2>
         <p>
-          如果你的项目使用 <code>paper.setup(canvas)</code> 初始化 Paper.js，扩展会自动检测。
-          请尝试<strong>刷新页面</strong>，确保扩展在 Paper.js 初始化之前注入。
+          设置 <code>window.__PAPER_SCOPE__</code> 后，扩展会通过 <code>PaperScope._scopes</code> 自动发现所有画布，
+          无需手动注册每个 Scope。请尝试<strong>刷新页面</strong>。
         </p>
       </div>
 
       <div className="setup-section">
-        <h3>方式一：设置全局变量（推荐）</h3>
-        <p>在 Paper.js 初始化完成后，设置 <code>window.__PAPER_SCOPE__</code> 全局变量：</p>
-        <CodeBlock code={manualCode} />
+        <h3>ES Module 项目（推荐）</h3>
+        <p>在引入 paper 模块时设置全局变量，只需一行代码：</p>
+        <CodeBlock code={setupCode} />
       </div>
 
       <div className="setup-section">
-        <h3>方式二：多画布注册</h3>
-        <p>如果你的应用包含多个 Canvas，可以使用 <code>window.__PAPER_SCOPES__</code> 注册每个 Scope：</p>
-        <CodeBlock code={multiCanvasCode} />
+        <h3>Script 标签引入</h3>
+        <p>通过 <code>&lt;script&gt;</code> 标签引入 Paper.js 时，在 setup 之前设置：</p>
+        <CodeBlock code={scriptCode} />
       </div>
 
       <div className="setup-section">
@@ -85,12 +78,12 @@ window.__PAPER_SCOPES__?.register('canvas2', scope2, canvas2);`;
             Content Script 需要在页面加载前注入。
           </li>
           <li>
-            <Text strong>使用 Paper.js 全局模式？</Text> 如果你通过 <code>&lt;script&gt;</code> 标签
-            引入 Paper.js，确保在 <code>paper.setup()</code> 之后设置全局变量。
+            <Text strong>多画布无需额外配置？</Text> 扩展通过 <code>PaperScope._scopes</code> 自动发现所有画布，
+            新增/删除画布会自动同步。
           </li>
           <li>
-            <Text strong>使用 ES Module？</Text> 在 <code>paper.setup(canvas)</code> 之后，
-            将 PaperScope 实例赋值给 <code>window.__PAPER_SCOPE__</code>。
+            <Text strong>设置时机？</Text> 在 <code>import paper</code> 之后立即设置即可，
+            无需等到 <code>paper.setup()</code> 之后。
           </li>
         </ul>
       </div>

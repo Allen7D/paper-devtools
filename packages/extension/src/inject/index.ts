@@ -9,10 +9,43 @@
   let tryCount = 0;
   let sceneChangeTimer: number | undefined;
 
+  function discoverScopes(): boolean {
+    const scopeRef = globalThis.__PAPER_SCOPE__;
+    if (!scopeRef) return false;
+
+    let PaperScopeClass = null;
+
+    if (scopeRef.PaperScope && scopeRef.PaperScope._scopes) {
+      PaperScopeClass = scopeRef.PaperScope;
+    } else if (scopeRef.constructor && scopeRef.constructor._scopes) {
+      PaperScopeClass = scopeRef.constructor;
+    } else if (scopeRef.paperScope) {
+      const inner = scopeRef.paperScope;
+      if (inner.PaperScope && inner.PaperScope._scopes) {
+        PaperScopeClass = inner.PaperScope;
+      } else if (inner.constructor && inner.constructor._scopes) {
+        PaperScopeClass = inner.constructor;
+      }
+    }
+
+    if (!PaperScopeClass) return false;
+
+    let discovered = false;
+    for (const [id, paperScope] of Object.entries(PaperScopeClass._scopes) as [string, any][]) {
+      const canvas = paperScope.view?.element;
+      if (canvas && !globalThis.__PAPER_SCOPES__?.scopes.has(id)) {
+        globalThis.__PAPER_SCOPES__?.register(id, paperScope, canvas);
+        discovered = true;
+      }
+    }
+    return discovered;
+  }
+
   function dispatchSceneChange() {
     if (sceneChangeTimer) return;
     sceneChangeTimer = window.setTimeout(() => {
       sceneChangeTimer = undefined;
+      discoverScopes();
       window.dispatchEvent(new CustomEvent('PAPER_SCENE_CHANGED'));
     }, SCENE_CHANGE_THROTTLE_MS);
   }
@@ -126,6 +159,16 @@
   function startScopeWatcher() {
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof HTMLCanvasElement) {
+            discoverScopes();
+          } else if (node instanceof HTMLElement) {
+            const canvases = node.querySelectorAll('canvas');
+            if (canvases.length > 0) {
+              discoverScopes();
+            }
+          }
+        }
         for (const node of mutation.removedNodes) {
           if (node instanceof HTMLCanvasElement) {
             const scopeId = findScopeIdByCanvas(node);
@@ -154,26 +197,16 @@
 
   function startPolling() {
     paperPollingInterval = window.setInterval(() => {
-      console.log('>>> 检测 Paper.js 是否存在:', tryCount + 1, '次');
-
       if (tryCount > MAX_TRIES) {
         stopPolling();
         return;
       }
 
-      if (globalThis.__PAPER_SCOPE__ && globalThis.__PAPER_SCOPE__.paperScope) {
-        const paperScope = {
-          paperScope: globalThis.__PAPER_SCOPE__.paperScope,
-          canvas: globalThis.__PAPER_SCOPE__.paperScope?.view?.element,
-          scopeId: globalThis.__PAPER_SCOPE__.paperScope?.view?.element?.id,
-          ...globalThis.__PAPER_SCOPE__,
-        };
+      if (globalThis.__PAPER_SCOPE__) {
+        const discovered = discoverScopes();
 
-        globalThis.__PAPER_SCOPES__?.register(paperScope.scopeId, paperScope.paperScope, paperScope.canvas);
-
-        if (globalThis.__PAPER_SCOPES__?.getActiveScope()) {
+        if (discovered && globalThis.__PAPER_SCOPES__?.getActiveScope()) {
           window.dispatchEvent(new CustomEvent('PAPER_JS_DETECTED'));
-          console.log('>>> Paper.js 检测成功，对应 Canvas 上的 scope 为:', paperScope.scopeId);
           stopPolling();
           return;
         }

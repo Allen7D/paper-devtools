@@ -1,11 +1,12 @@
 import paper from 'paper';
 import { createShapes, addRandomShape } from './draw';
 
+globalThis.__PAPER_SCOPE__ = paper;
+
 interface ScopeEntry {
   scope: paper.PaperScope;
   container: HTMLDivElement;
   canvas: HTMLCanvasElement;
-  scopeId: string;
 }
 
 const scopeEntries: ScopeEntry[] = [];
@@ -92,18 +93,8 @@ const drawPaperExample = (
     document.body.appendChild(container);
   }
 
-  const scopeId = canvas.id || `scope-${canvasIndex}`;
-  const entry: ScopeEntry = { scope: paperScope, container, canvas, scopeId };
+  const entry: ScopeEntry = { scope: paperScope, container, canvas };
   scopeEntries.push(entry);
-
-  globalThis.__PAPER_SCOPES__?.register(scopeId, paperScope, canvas);
-
-  if (!globalThis.__PAPER_SCOPE__) {
-    globalThis.__PAPER_SCOPE__ = {
-      scopeId,
-      paperScope,
-    };
-  }
 
   deleteBtn.onclick = () => removeScope(entry);
 
@@ -113,8 +104,6 @@ const drawPaperExample = (
 };
 
 const removeScope = (entry: ScopeEntry) => {
-  globalThis.__PAPER_SCOPES__?.unregister(entry.scopeId);
-
   try {
     (entry.scope as any).remove?.();
   } catch (e) {
@@ -145,12 +134,6 @@ const addButton = () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   addButton();
-
-  const entry = drawPaperExample(800, 600, 'paper-canvas-0');
+  drawPaperExample(800, 600, 'paper-canvas-0');
   canvasIndex = 1;
-
-  globalThis.__PAPER_SCOPE__ = {
-    scopeId: entry.scopeId,
-    paperScope: entry.scope,
-  };
 });
