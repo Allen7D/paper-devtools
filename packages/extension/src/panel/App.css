@@ -1,0 +1,54 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+.app-container .app-header {
+  padding: 10px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f8f8f8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-container .app-header h1 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+.app-container .app-header .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.app-container .app-header .connection-status {
+  font-size: 0.8rem;
+  color: #666;
+}
+.app-container .app-header .help-icon {
+  font-size: 16px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.app-container .app-header .help-icon:hover {
+  color: #1890ff;
+}
+.app-container .app-content {
+  flex: 1;
+  height: calc(100vh - 70px);
+  overflow: hidden;
+}
+.scene-panel,
+.properties-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.scene-panel .panel-content,
+.properties-panel .panel-content {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
