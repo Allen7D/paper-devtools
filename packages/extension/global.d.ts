@@ -23,10 +23,10 @@ declare global {
     __PAPER_SCOPES__?: PaperScopesGlobal;
     __PAPER_SCOPE__?: any;
   }
-  
+
   // 扩展 globalThis 接口
   var __PAPER_SCOPES__: PaperScopesGlobal | undefined;
   var __PAPER_SCOPE__: any;
 }
 
-export {};
+export { };

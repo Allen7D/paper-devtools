@@ -10,15 +10,35 @@
     padding: 10px 15px;
     border-bottom: 1px solid #e0e0e0;
     background-color: #f8f8f8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
     h1 {
       font-size: 1.2rem;
-      margin: 0 0 10px 0;
+      margin: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .connection-status {
       font-size: 0.8rem;
       color: #666;
+    }
+
+    .help-icon {
+      font-size: 16px;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #1890ff;
+      }
     }
   }
 
@@ -42,5 +62,41 @@
     flex: 1;
     height: 100%;
     overflow: hidden;
+  }
+}
+
+.help-content {
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 16px 0 8px;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+
+    li {
+      font-size: 13px;
+      line-height: 1.8;
+      color: #555;
+
+      b {
+        color: #333;
+      }
+
+      code {
+        background: #f5f5f5;
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-size: 12px;
+        color: #c41d7f;
+      }
+    }
   }
 }
