@@ -3,11 +3,11 @@
 (function () {
   const MAX_TRIES = 10;
   const POLLING_INTERVAL_MS = 1000;
-  const SCENE_CHANGE_THROTTLE_MS = 200;
+  const SCENE_CHANGE_THROTTLE_MS = 500;
 
   let paperPollingInterval: number | undefined;
   let tryCount = 0;
-  let sceneChangeTimer: number | undefined;
+  let lastSceneChangeTime = 0;
 
   function discoverScopes(): boolean {
     const scopeRef = globalThis.__PAPER_SCOPE__;
@@ -42,12 +42,13 @@
   }
 
   function dispatchSceneChange() {
-    if (sceneChangeTimer) return;
-    sceneChangeTimer = window.setTimeout(() => {
-      sceneChangeTimer = undefined;
-      discoverScopes();
-      window.dispatchEvent(new CustomEvent('PAPER_SCENE_CHANGED'));
-    }, SCENE_CHANGE_THROTTLE_MS);
+    const now = Date.now();
+    if (now - lastSceneChangeTime < SCENE_CHANGE_THROTTLE_MS) {
+      return;
+    }
+    lastSceneChangeTime = now;
+    discoverScopes();
+    window.dispatchEvent(new CustomEvent('PAPER_SCENE_CHANGED'));
   }
 
   function proxyViewUpdate(paperScope: any) {
@@ -55,15 +56,10 @@
     if (!view || !view.update) return;
 
     const originalUpdate = view.update.bind(view);
-    let proxied = false;
 
     view.update = function () {
       const result = originalUpdate();
-      if (!proxied) {
-        proxied = true;
-        dispatchSceneChange();
-        window.setTimeout(() => { proxied = false; }, SCENE_CHANGE_THROTTLE_MS);
-      }
+      dispatchSceneChange();
       return result;
     };
   }
