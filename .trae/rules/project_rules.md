@@ -4,7 +4,7 @@
 
 Chrome DevTools 扩展，为 Paper.js 应用提供调试环境。pnpm monorepo。
 
-**技术栈**: Vite 7 + React 19 + Ant Design 5 + Zustand 5 + CRXJS (Chrome MV3) + Paper.js 0.12 + TypeScript 5.8
+**技术栈**: Vite 7 + React 19 + Ant Design 6 + Zustand 5 + CRXJS (Chrome MV3) + Paper.js 0.12 + TypeScript 5.8
 
 ## 核心命令
 
@@ -140,6 +140,12 @@ inject/index.ts 轮询检测 (10次 × 1秒)
 1. **CustomEvent 而非 postMessage**: 注入脚本和 Content Script 通过 DOM 事件通信，无需序列化，支持 `detail` 携带任意结构化数据
 2. **run_at: document_start**: 必须在 Paper.js 初始化之前开始监听
 3. **Inject 独立构建**: 运行在页面上下文（非扩展隔离环境），需 IIFE 格式，无法使用 `chrome.runtime` API
+
+## 测试验证
+
+- 每次代码修改完成后，必须运行 `npx vitest run` 确保所有测试通过
+- 如果测试失败，必须修复问题直到测试全部通过
+- 新增功能或修复 Bug 时，应同步补充对应的单元测试
 
 ## 已知技术债务
 
