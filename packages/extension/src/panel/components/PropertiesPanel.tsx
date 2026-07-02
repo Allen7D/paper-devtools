@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Card,
   Input,
@@ -291,6 +291,39 @@ const RectangleEditor: React.FC<{ value: any; onChange: (value: any) => void }> 
   );
 };
 
+// 节流滑块组件
+// - 本地 state 实时更新，保证拖拽时滑块跟随鼠标
+// - onChange 回调（节流）仅负责向后端同步，不影响 UI 流畅度
+const ThrottledSlider: React.FC<{
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step: number;
+  tooltipFormatter: (val?: number) => string;
+}> = ({ value, onChange, min, max, step, tooltipFormatter }) => {
+  const [localValue, setLocalValue] = useState(value);
+
+  // 外部值变化时同步本地（如切换节点、后端回写）
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  return (
+    <Slider
+      min={min}
+      max={max}
+      step={step}
+      value={localValue}
+      onChange={(val) => {
+        setLocalValue(val);
+        onChange(val);
+      }}
+      tooltip={{ formatter: tooltipFormatter }}
+    />
+  );
+};
+
 // 对象编辑器（折叠面板形式）
 const ObjectEditor: React.FC<{
   value: any;
@@ -369,25 +402,25 @@ const PropertyEditor: React.FC<{
 
       case 'opacity':
         return (
-          <Slider
+          <ThrottledSlider
+            value={propValue}
+            onChange={throttledHandleChange}
             min={0}
             max={1}
             step={0.01}
-            value={propValue}
-            onChange={throttledHandleChange}
-            tooltip={{ formatter: (val) => `${Math.round((val || 0) * 100)}%` }}
+            tooltipFormatter={(val) => `${Math.round((val || 0) * 100)}%`}
           />
         );
 
       case 'angle':
         return (
-          <Slider
+          <ThrottledSlider
+            value={propValue}
+            onChange={throttledHandleChange}
             min={0}
             max={360}
             step={1}
-            value={propValue}
-            onChange={throttledHandleChange}
-            tooltip={{ formatter: (val) => `${val}°` }}
+            tooltipFormatter={(val) => `${val}°`}
           />
         );
 
