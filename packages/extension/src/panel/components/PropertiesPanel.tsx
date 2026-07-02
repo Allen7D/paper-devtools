@@ -12,8 +12,10 @@ import {
   ColorPicker,
   Slider,
   Collapse,
+  Tooltip,
   message
 } from 'antd';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 import type { Color } from 'antd/es/color-picker';
 import { usePaperStore } from '../store';
 import { useThrottledCallback } from '../hooks/useThrottledCallback';
@@ -532,6 +534,16 @@ export const PropertiesPanel: React.FC = () => {
               <Text type="secondary" style={{ fontSize: '12px' }}>
                 ({propertyEntries.length} 项)
               </Text>
+              <Tooltip
+                title={
+                  <div>
+                    <div>position 的 x/y 是图元的中心坐标</div>
+                    <div>bounds 的 x/y 是图元的左上角坐标</div>
+                  </div>
+                }
+              >
+                <QuestionCircleOutlined style={{ fontSize: '12px', color: '#999', cursor: 'help' }} />
+              </Tooltip>
             </Space>
           }
         >
