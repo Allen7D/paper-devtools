@@ -1,6 +1,7 @@
 /* eslint-disable no-var */
 
 // Paper.js 相关类型定义
+
 interface PaperScopeData {
   scope: any;
   canvas: HTMLCanvasElement;
@@ -18,6 +19,9 @@ interface PaperScopesGlobal {
 }
 
 declare global {
+  /** Scope 变化类型 */
+  type ScopeChangeType = 'added' | 'removed' | 'activated';
+
   // 扩展 Window 接口
   interface Window {
     __PAPER_SCOPES__?: PaperScopesGlobal;

@@ -1,5 +1,12 @@
 /// <reference path="../../global.d.ts" />
 
+/** Scope 变化类型常量 */
+const SCOPE_CHANGE_TYPE = {
+  ADDED: 'added',
+  REMOVED: 'removed',
+  ACTIVATED: 'activated',
+} as const;
+
 /**
  * Paper.js 检测与 Scope 管理注入脚本
  *
@@ -113,7 +120,7 @@
    * @param type - 变化类型：`'added'`（新增）、`'removed'`（移除）、`'activated'`（激活切换）
    * @param scopeId - 发生变化的 Scope ID
    */
-  function dispatchScopeChange(type: string, scopeId: string) {
+  function dispatchScopeChange(type: ScopeChangeType, scopeId: string) {
     window.dispatchEvent(
       new CustomEvent('PAPER_SCOPE_CHANGE', {
         detail: {
@@ -142,8 +149,8 @@
    * - `switchScope(scopeId)` — 切换激活的 Scope
    * - `getAllScopes()` — 获取所有已注册 Scope 的摘要信息
    *
-   * 注册时会自动代理视图更新方法，并派发 `'added'` 类型的 Scope 变化事件。
-   * 注销时会自动切换激活 Scope（若注销的是当前激活项），并派发 `'removed'` 事件。
+   * 注册时会自动代理视图更新方法，并派发 {@link SCOPE_CHANGE_TYPE.ADDED} 类型的 Scope 变化事件。
+   * 注销时会自动切换激活 Scope（若注销的是当前激活项），并派发 {@link SCOPE_CHANGE_TYPE.REMOVED} 事件。
    */
   if (!globalThis.__PAPER_SCOPES__) {
     globalThis.__PAPER_SCOPES__ = {
@@ -171,7 +178,7 @@
         }
 
         proxyViewUpdate(paperScope);
-        dispatchScopeChange('added', scopeId);
+        dispatchScopeChange(SCOPE_CHANGE_TYPE.ADDED, scopeId);
       },
 
       /**
@@ -192,7 +199,7 @@
           this.activeScope = remaining.length > 0 ? remaining[0] : null;
         }
 
-        dispatchScopeChange('removed', scopeId);
+        dispatchScopeChange(SCOPE_CHANGE_TYPE.REMOVED, scopeId);
         return true;
       },
 
@@ -216,7 +223,7 @@
       switchScope(scopeId) {
         if (this.scopes.has(scopeId)) {
           this.activeScope = scopeId;
-          dispatchScopeChange('activated', scopeId);
+          dispatchScopeChange(SCOPE_CHANGE_TYPE.ACTIVATED, scopeId);
           return true;
         }
         return false;
