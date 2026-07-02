@@ -29,6 +29,7 @@ const HelpContent: React.FC = () => (
         <h3>场景树</h3>
         <ul>
           <li>点击节点 — 选中图元，右侧显示属性；再次点击取消选中</li>
+          <li>悬停节点 — 蓝色虚线边框</li>
           <li><Icon><EyeOutlined /></Icon> 眼睛图标 — 切换图元可见性</li>
           <li><Icon><CaretRightOutlined /></Icon> 箭头图标 — 展开/折叠子节点</li>
         </ul>
@@ -36,7 +37,8 @@ const HelpContent: React.FC = () => (
         <h3>拾取器</h3>
         <ul>
           <li><Icon><AimOutlined /></Icon> 按钮 — 激活拾取器，Canvas 光标变为十字</li>
-          <li>点击 Canvas 上的图元 — 选中该图元</li>
+          <li>悬停图元 — 蓝色虚线边框</li>
+          <li>点击图元 — 选中该图元</li>
           <li><Kbd>Ctrl</Kbd> + 点击 — 向上拾取父级图元（Group → Layer → Project）</li>
           <li>点击已选中图元 — 取消选中</li>
           <li>再次点击 <Icon><AimOutlined /></Icon> — 关闭拾取器</li>
@@ -60,8 +62,7 @@ const HelpContent: React.FC = () => (
 
         <h3>高亮覆盖层</h3>
         <ul>
-          <li>选中节点 — Canvas 上显示红色实线边框高亮</li>
-          <li>悬停节点 — Canvas 上显示蓝色虚线边框高亮</li>
+          <li>选中图元 — 红色实线边框</li>
           <li><Icon><EyeOutlined /></Icon> 按钮 — 开关高亮覆盖层</li>
         </ul>
 
