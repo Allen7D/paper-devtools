@@ -1,4 +1,3 @@
-import paper from 'paper';
 import type { NodeItemPropertie, NodeProjectPropertie } from "types";
 
 /**
@@ -72,8 +71,8 @@ export function extractItemProperties(item: paper.Item): NodeItemPropertie {
   }
 
   // 闭合状态
-  if (item instanceof paper.Path && item.closed !== undefined) {
-    properties.closed = item.closed;
+  if ('closed' in item && item.closed != null) {
+    properties.closed = item.closed as boolean;
   }
 
   return properties;

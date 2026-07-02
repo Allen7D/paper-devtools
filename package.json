@@ -22,7 +22,6 @@
     "@types/chrome": "^0.1.1",
     "@types/less": "^3.0.8",
     "@types/node": "^24.0.15",
-    "@types/paper": "^0.12.3",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.7.0",
