@@ -1,7 +1,13 @@
 import type { NodeItemPropertie, NodeProjectPropertie } from "types";
 
 /**
- * 提取 paper.js 中 Project 的属性
+ * 提取 paper.js 中 Project 的属性。
+ *
+ * 从 Project 实例中提取视图尺寸和图层数量等属性，
+ * 用于在 DevTools 面板中展示项目级别的信息。
+ *
+ * @param project - paper.js Project 实例
+ * @returns 包含项目属性的对象，包括 `type`、`viewSize`（视图尺寸）和 `layersCount`（图层数量）
  */
 export function extractProjectProperties(project: paper.Project): NodeProjectPropertie {
   const properties: NodeProjectPropertie = {
@@ -25,9 +31,13 @@ export function extractProjectProperties(project: paper.Project): NodeProjectPro
 }
 
 /**
- * 提取 paper.js 图元的属性
- * @param item - paper.js 图元
- * @returns NodeItemPropertie - 图元属性对象
+ * 提取 paper.js 图元的属性。
+ *
+ * 从 Item 实例中提取位置、边界框、填充颜色、描边颜色、描边宽度、
+ * 透明度和闭合状态等属性，用于在 DevTools 面板中展示和编辑图元属性。
+ *
+ * @param item - paper.js 图元实例
+ * @returns 图元属性对象，仅包含图元实际拥有的属性字段
  */
 export function extractItemProperties(item: paper.Item): NodeItemPropertie {
   const properties: NodeItemPropertie = {};

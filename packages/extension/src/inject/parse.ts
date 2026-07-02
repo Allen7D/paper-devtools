@@ -1,6 +1,15 @@
 import { extractItemProperties, extractProjectProperties } from "./extra";
 import { ScopeProjectNode, ScopeTreeNode } from "types";
 
+/**
+ * 根据 paper.js Project 实例构建场景树根节点。
+ *
+ * 遍历 Project 的所有图层（layers），递归调用 {@link buildScopeTree} 构建子节点，
+ * 最终生成包含项目属性和完整子树结构的 {@link ScopeProjectNode}。
+ *
+ * @param project - paper.js Project 实例
+ * @returns 场景树根节点，id 固定为 `"root"`
+ */
 function buildScopeProject(project: paper.Project) {
   const nodeId = "root";
   const node: ScopeProjectNode = {
@@ -25,6 +34,17 @@ function buildScopeProject(project: paper.Project) {
   return node;
 }
 
+/**
+ * 递归构建 paper.js 图元的场景树节点。
+ *
+ * 从 Item 实例中提取名称、类型、可见性、选中状态等基本信息，
+ * 并递归处理所有子图元（children），生成完整的树形结构。
+ * 节点 ID 采用路径格式（如 `"root_0_1_2"`），用于后续定位。
+ *
+ * @param item - paper.js 图元实例
+ * @param id - 节点 ID，由父节点 ID 和子索引拼接而成
+ * @returns 场景树节点
+ */
 function buildScopeTree(item: paper.Item, id = "") {
   const nodeId = id;
 
@@ -52,6 +72,11 @@ function buildScopeTree(item: paper.Item, id = "") {
   return node;
 }
 
+/**
+ * 获取当前激活的 PaperScope 实例。
+ *
+ * @returns 激活的 PaperScope 实例，若无激活项或全局接口不存在则返回 `null`
+ */
 function getActiveScope() {
   if (!window.__PAPER_SCOPES__ || !window.__PAPER_SCOPES__.getActiveScope) {
     return null;
@@ -59,16 +84,35 @@ function getActiveScope() {
   return window.__PAPER_SCOPES__.getActiveScope();
 }
 
+/**
+ * 获取当前激活 Scope 的 Project 实例。
+ *
+ * @returns 激活的 Project 实例，若无则返回 `null`
+ */
 function getActiveProject(): paper.Project | null {
   const activeScope = getActiveScope();
   return activeScope && activeScope.project ? activeScope.project : null;
 }
 
+/**
+ * 获取当前激活 Scope 的 View 实例。
+ *
+ * @returns 激活的 View 实例，若无则返回 `null`
+ */
 function getActiveView(): paper.View | null {
   const activeScope = getActiveScope();
   return activeScope && activeScope.view ? activeScope.view : null;
 }
 
+/**
+ * 根据节点 ID 路径在当前 Project 中查找对应的 paper.js 图元。
+ *
+ * 节点 ID 格式为 `"root_0_1_2"`，其中 `root` 表示 Project 根节点，
+ * 后续数字表示在各层级子元素中的索引位置。
+ *
+ * @param id - 节点 ID 路径
+ * @returns 匹配的图元实例，未找到则返回 `null`
+ */
 function findPaperItemById(id: string): paper.Item | null {
   const project = getActiveProject();
   if (!project) return null;
@@ -101,18 +145,37 @@ function findPaperItemById(id: string): paper.Item | null {
   return current;
 }
 
+/** 选中节点的高亮覆盖层元素 */
 let selectedOverlay: HTMLDivElement | null = null;
+/** 悬停节点的高亮覆盖层元素（用于拾取器模式） */
 let hoverOverlay: HTMLDivElement | null = null;
+/** 覆盖层容器元素，用于承载所有高亮覆盖层 */
 let overlayContainer: HTMLDivElement | null = null;
+/** 当前高亮选中节点的 ID */
 let highlightedNodeId: string | null = null;
+/** 当前悬停节点的 ID */
 let hoveredNodeId: string | null = null;
+/** 是否启用选中高亮覆盖层 */
 let overlayEnabled = true;
+/** 拾取器模式是否激活 */
 let pickerActive = false;
+/** 是否启用点击 Canvas 自动切换 Scope */
 let autoSwitchScope = true;
+/** Canvas 点击事件处理器映射，用于自动切换 Scope */
 let canvasClickHandlers = new WeakMap<HTMLCanvasElement, (e: MouseEvent) => void>();
+/** 拾取器模式的 mousemove 事件处理器 */
 let pickerMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+/** 拾取器模式的 click 事件处理器 */
 let pickerClickHandler: ((e: MouseEvent) => void) | null = null;
 
+/**
+ * 获取或创建覆盖层容器元素。
+ *
+ * 容器是一个绝对定位的 div，插入到当前激活 Canvas 的后面。
+ * 若 Canvas 父元素是静态定位，会自动改为相对定位以确保覆盖层正确叠加。
+ *
+ * @returns 覆盖层容器元素
+ */
 function getOverlayContainer(): HTMLDivElement {
   if (overlayContainer && overlayContainer.parentNode) {
     return overlayContainer;
@@ -136,6 +199,15 @@ function getOverlayContainer(): HTMLDivElement {
   return overlayContainer;
 }
 
+/**
+ * 计算图元在屏幕坐标系中的边界矩形。
+ *
+ * 将图元的 Paper.js 坐标系边界转换为屏幕像素坐标，
+ * 考虑 Canvas 元素的实际显示尺寸与内部坐标系的比例缩放。
+ *
+ * @param item - paper.js 图元实例
+ * @returns 屏幕坐标边界 `{ left, top, width, height }`，无法计算时返回 `null`
+ */
 function getItemScreenBounds(item: paper.Item): { left: number; top: number; width: number; height: number } | null {
   const view = getActiveView();
   const canvas = view?.element as HTMLCanvasElement | undefined;
@@ -155,6 +227,12 @@ function getItemScreenBounds(item: paper.Item): { left: number; top: number; wid
   };
 }
 
+/**
+ * 将覆盖层元素定位到指定图元的屏幕边界位置。
+ *
+ * @param overlay - 要定位的覆盖层 div 元素
+ * @param item - 目标图元实例
+ */
 function positionOverlay(overlay: HTMLDivElement, item: paper.Item) {
   const screenBounds = getItemScreenBounds(item);
   if (!screenBounds) {
@@ -172,6 +250,15 @@ function positionOverlay(overlay: HTMLDivElement, item: paper.Item) {
   overlay.style.height = screenBounds.height + 'px';
 }
 
+/**
+ * 创建高亮覆盖层元素并添加到容器中。
+ *
+ * - `selected` 类型：红色实线边框，用于标记当前选中的图元
+ * - `hover` 类型：蓝色虚线边框，用于拾取器模式下的悬停预览
+ *
+ * @param type - 覆盖层类型：`'selected'` 或 `'hover'`
+ * @returns 创建的覆盖层 div 元素
+ */
 function createOverlayElement(type: 'selected' | 'hover'): HTMLDivElement {
   const el = document.createElement('div');
   el.className = `__paper_devtools_overlay_${type}__`;
@@ -188,6 +275,12 @@ function createOverlayElement(type: 'selected' | 'hover'): HTMLDivElement {
   return el;
 }
 
+/**
+ * 更新指定类型覆盖层的位置，使其跟随对应节点图元。
+ *
+ * @param type - 覆盖层类型：`'selected'` 或 `'hover'`
+ * @param nodeId - 目标节点 ID
+ */
 function updateOverlayPosition(type: 'selected' | 'hover', nodeId: string) {
   const item = findPaperItemById(nodeId);
   if (!item) return;
@@ -198,11 +291,26 @@ function updateOverlayPosition(type: 'selected' | 'hover', nodeId: string) {
   positionOverlay(overlay, item);
 }
 
+/**
+ * 同步更新所有覆盖层的位置。
+ *
+ * 在场景变化、窗口缩放或滚动时调用，确保选中高亮和悬停高亮
+ * 覆盖层始终与图元位置保持一致。
+ */
 function syncAllOverlays() {
   if (overlayEnabled && highlightedNodeId) updateOverlayPosition('selected', highlightedNodeId);
   if (hoveredNodeId) updateOverlayPosition('hover', hoveredNodeId);
 }
 
+/**
+ * 显示指定节点的高亮覆盖层。
+ *
+ * - `selected` 类型受 `overlayEnabled` 开关控制
+ * - `hover` 类型用于拾取器模式，独立于 `overlayEnabled` 开关
+ *
+ * @param nodeId - 要高亮的节点 ID
+ * @param type - 高亮类型：`'selected'` 或 `'hover'`
+ */
 function showHighlight(nodeId: string, type: 'selected' | 'hover') {
   // overlayEnabled only controls the selected overlay; hover overlay is for picker
   if (type === 'selected' && !overlayEnabled) return;
@@ -221,6 +329,11 @@ function showHighlight(nodeId: string, type: 'selected' | 'hover') {
   }
 }
 
+/**
+ * 隐藏指定类型的高亮覆盖层。
+ *
+ * @param type - 要隐藏的覆盖层类型：`'selected'` 或 `'hover'`
+ */
 function hideHighlight(type: 'selected' | 'hover') {
   if (type === 'selected' && selectedOverlay) {
     selectedOverlay.style.display = 'none';
@@ -232,6 +345,12 @@ function hideHighlight(type: 'selected' | 'hover') {
   }
 }
 
+/**
+ * 清除所有覆盖层元素并重置相关状态。
+ *
+ * 移除选中覆盖层、悬停覆盖层和容器元素，并清空所有节点 ID 引用。
+ * 通常在 Scope 切换或 DevTools 清理时调用。
+ */
 function clearAllOverlays() {
   if (selectedOverlay) {
     selectedOverlay.remove();
@@ -249,6 +368,14 @@ function clearAllOverlays() {
   hoveredNodeId = null;
 }
 
+/**
+ * 设置选中高亮覆盖层的启用/禁用状态。
+ *
+ * 禁用时隐藏当前选中覆盖层；重新启用时若有高亮节点则恢复显示。
+ * 注意：此开关仅影响 `selected` 类型覆盖层，不影响拾取器的 `hover` 覆盖层。
+ *
+ * @param enabled - 是否启用选中高亮覆盖层
+ */
 function setOverlayEnabled(enabled: boolean) {
   overlayEnabled = enabled;
   if (!enabled) {
@@ -263,6 +390,12 @@ function setOverlayEnabled(enabled: boolean) {
   }
 }
 
+/**
+ * 为所有已注册 Scope 的 Canvas 元素绑定点击事件监听器。
+ *
+ * 点击 Canvas 时自动切换到对应的 Scope（受 `autoSwitchScope` 开关控制）。
+ * 使用 WeakMap 避免重复绑定，拾取器模式激活时跳过自动切换。
+ */
 function setupCanvasClickListeners() {
   if (!window.__PAPER_SCOPES__) return;
 
@@ -285,6 +418,11 @@ function setupCanvasClickListeners() {
   }
 }
 
+/**
+ * 设置是否启用点击 Canvas 自动切换 Scope 功能。
+ *
+ * @param enabled - 是否启用自动切换
+ */
 function setAutoSwitchScope(enabled: boolean) {
   autoSwitchScope = enabled;
   if (enabled) {
@@ -292,6 +430,14 @@ function setAutoSwitchScope(enabled: boolean) {
   }
 }
 
+/**
+ * 在当前 Project 的场景树中查找指定图元对应的节点 ID。
+ *
+ * 从 Project 根节点开始深度优先搜索，比较图元引用是否匹配。
+ *
+ * @param targetItem - 要查找的图元实例
+ * @returns 匹配的节点 ID，未找到则返回 `null`
+ */
 function findNodeIdByItem(targetItem: paper.Item): string | null {
   const project = getActiveProject();
   if (!project) return null;
@@ -316,6 +462,15 @@ function findNodeIdByItem(targetItem: paper.Item): string | null {
   return search(project, "root");
 }
 
+/**
+ * 将鼠标事件的屏幕坐标转换为当前激活 Scope 的 Canvas 坐标系中的点。
+ *
+ * 考虑 Canvas 元素的显示尺寸与内部坐标系的比例缩放，
+ * 使用当前激活 Scope 的 `Point` 构造函数创建点对象。
+ *
+ * @param e - 鼠标事件
+ * @returns Canvas 坐标系中的 Point 实例，无法计算时返回 `null`
+ */
 function getCanvasPoint(e: MouseEvent): any | null {
   const scope = getActiveScope();
   const view = getActiveView();
@@ -332,6 +487,17 @@ function getCanvasPoint(e: MouseEvent): any | null {
   return new scope.Point(x, y);
 }
 
+/**
+ * 启用拾取器模式。
+ *
+ * 拾取器模式允许用户通过鼠标在 Canvas 上直接点选图元：
+ * - 鼠标移动时进行命中测试，显示悬停高亮覆盖层
+ * - 点击时选中命中的图元，派发 `PAPER_PICKER_RESULT` 事件
+ * - Ctrl/Cmd + 点击时选中父级图元
+ * - 再次点击已选中图元时取消选中
+ *
+ * 激活后 Canvas 鼠标光标变为十字准星样式。
+ */
 function enablePicker() {
   if (pickerActive) return;
   pickerActive = true;
@@ -412,6 +578,12 @@ function enablePicker() {
   canvas.addEventListener('click', pickerClickHandler, true);
 }
 
+/**
+ * 禁用拾取器模式。
+ *
+ * 移除 Canvas 上的 mousemove 和 click 事件监听器，
+ * 恢复鼠标光标样式，并隐藏悬停高亮覆盖层。
+ */
 function disablePicker() {
   if (!pickerActive) return;
   pickerActive = false;
@@ -434,18 +606,30 @@ function disablePicker() {
   hideHighlight('hover');
 }
 
+/**
+ * 监听 `PAPER_SCENE_CHANGED` 事件，场景变化时同步更新所有覆盖层位置。
+ */
 window.addEventListener('PAPER_SCENE_CHANGED', () => {
   syncAllOverlays();
 });
 
+/**
+ * 监听窗口 `resize` 事件，窗口尺寸变化时同步更新覆盖层位置。
+ */
 window.addEventListener('resize', () => {
   syncAllOverlays();
 });
 
+/**
+ * 监听窗口 `scroll` 事件（捕获阶段），页面滚动时同步更新覆盖层位置。
+ */
 window.addEventListener('scroll', () => {
   syncAllOverlays();
 }, true);
 
+/**
+ * 监听 `PAPER_SCOPE_CHANGE` 事件，Scope 切换时清除所有覆盖层并重新绑定 Canvas 点击监听。
+ */
 window.addEventListener('PAPER_SCOPE_CHANGE', () => {
   clearAllOverlays();
   if (autoSwitchScope) {
@@ -453,6 +637,31 @@ window.addEventListener('PAPER_SCOPE_CHANGE', () => {
   }
 });
 
+/**
+ * DevTools 面板消息处理入口。
+ *
+ * 监听 `PAPER_DEVTOOLS_MESSAGE` 自定义事件，根据 `action` 字段分发到对应的处理逻辑。
+ * 处理完成后通过 `PAPER_DEVTOOLS_RESPONSE` 事件返回响应，携带与请求相同的 `id` 用于异步匹配。
+ *
+ * 支持的 Action 列表：
+ * | Action | 说明 |
+ * |--------|------|
+ * | `GET_SCENE_TREE` | 获取当前激活 Scope 的场景树 |
+ * | `SELECT_NODE` | 选中指定节点并显示高亮覆盖层 |
+ * | `TOGGLE_NODE_VISIBILITY` | 切换节点可见性 |
+ * | `UPDATE_NODE_PROPERTY` | 更新节点属性（position/fillColor/strokeColor 等） |
+ * | `GET_AVAILABLE_SCOPES` | 获取所有可用 Scope 列表 |
+ * | `SET_ACTIVE_SCOPE` | 切换激活的 Scope |
+ * | `GET_NODE_INFO` | 获取指定节点的信息 |
+ * | `HIGHLIGHT_NODE` | 高亮指定节点 |
+ * | `CLEAR_HIGHLIGHT` | 清除高亮覆盖层 |
+ * | `SET_OVERLAY_ENABLED` | 启用/禁用选中高亮覆盖层 |
+ * | `ENABLE_PICKER` | 启用拾取器模式 |
+ * | `DISABLE_PICKER` | 禁用拾取器模式 |
+ * | `DEVTOOLS_CLEANUP` | DevTools 关闭时清理资源 |
+ * | `SET_AUTO_SWITCH_SCOPE` | 启用/禁用点击 Canvas 自动切换 Scope |
+ * | `GET_AUTO_SWITCH_SCOPE` | 获取自动切换 Scope 的启用状态 |
+ */
 window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
   const message = (event as any).detail;
   if (!message || !message.action) return;
