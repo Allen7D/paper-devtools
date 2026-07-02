@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Card,
   Input,
@@ -100,45 +100,121 @@ const ColorEditor: React.FC<{ value: any; onChange: (value: any) => void }> = ({
   );
 };
 
-// 坐标点编辑器
-const PointEditor: React.FC<{ value: any; onChange: (value: any) => void }> = ({ value, onChange }) => {
-  const handleXChange = (x: number | null) => {
-    if (x !== null) onChange({ ...value, x });
+// 可拖拽调整的数值输入组件
+// - 水平拖拽：修改数值（Shift 加速 10x，Ctrl 减速 0.1x）
+// - 点击：进入文本编辑模式
+const DragNumberInput: React.FC<{
+  value: number;
+  onChange: (value: number) => void;
+  precision?: number;
+  step?: number;
+  label?: string;
+}> = ({ value, onChange, precision = 2, step = 1, label }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const dragRef = useRef<{ startX: number; startValue: number; moved: boolean; pointerId: number } | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const round = (v: number) => {
+    const factor = Math.pow(10, precision);
+    return Math.round(v * factor) / factor;
   };
 
-  const handleYChange = (y: number | null) => {
-    if (y !== null) onChange({ ...value, y });
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isEditing) return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragRef.current = {
+      startX: e.clientX,
+      startValue: value,
+      moved: false,
+      pointerId: e.pointerId,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    if (!dragRef.current.moved && Math.abs(dx) > 2) {
+      dragRef.current.moved = true;
+    }
+    if (dragRef.current.moved) {
+      const speed = e.shiftKey ? 10 : e.ctrlKey ? 0.1 : 1;
+      onChange(round(dragRef.current.startValue + dx * step * speed));
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current) return;
+    const wasMoved = dragRef.current.moved;
+    dragRef.current = null;
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+    if (!wasMoved) {
+      setIsEditing(true);
+      setEditValue(String(round(value)));
+      requestAnimationFrame(() => inputRef.current?.select());
+    }
+  };
+
+  const commitEdit = () => {
+    const parsed = parseFloat(editValue);
+    if (!isNaN(parsed)) {
+      onChange(round(parsed));
+    }
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="drag-number-wrapper">
+        {label && <span className="drag-number-label">{label}</span>}
+        <input
+          ref={inputRef}
+          className="drag-number-editing"
+          type="number"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commitEdit();
+            if (e.key === 'Escape') setIsEditing(false);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
-    <Row gutter={4}>
-      <Col span={12}>
-        <Space.Compact style={{ width: '100%' }}>
-          <Input style={{ width: 28, textAlign: 'center', cursor: 'default' }} value="X" readOnly size="small" />
-          <InputNumber
-            value={value.x}
-            onChange={handleXChange}
-            placeholder="X"
-            size="small"
-            precision={2}
-            style={{ flex: 1 }}
-          />
-        </Space.Compact>
-      </Col>
-      <Col span={12}>
-        <Space.Compact style={{ width: '100%' }}>
-          <Input style={{ width: 28, textAlign: 'center', cursor: 'default' }} value="Y" readOnly size="small" />
-          <InputNumber
-            value={value.y}
-            onChange={handleYChange}
-            placeholder="Y"
-            size="small"
-            precision={2}
-            style={{ flex: 1 }}
-          />
-        </Space.Compact>
-      </Col>
-    </Row>
+    <div
+      className="drag-number-input"
+      title="拖拽调整数值 · 点击输入 · Shift加速 · Ctrl减速"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+    >
+      {label && <span className="drag-number-label">{label}</span>}
+      <span className="drag-number-value">{String(round(value))}</span>
+      <span className="drag-number-handle">⇄</span>
+    </div>
+  );
+};
+
+// 坐标点编辑器
+const PointEditor: React.FC<{ value: any; onChange: (value: any) => void }> = ({ value, onChange }) => {
+  return (
+    <div className="point-editor">
+      <DragNumberInput
+        label="X"
+        value={value.x}
+        onChange={(x) => onChange({ ...value, x })}
+      />
+      <DragNumberInput
+        label="Y"
+        value={value.y}
+        onChange={(y) => onChange({ ...value, y })}
+      />
+    </div>
   );
 };
 

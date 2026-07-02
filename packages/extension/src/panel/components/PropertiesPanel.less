@@ -11,24 +11,112 @@
     flex: 1;
     overflow: auto;
     padding: 12px;
-    
+
     // 属性编辑器间距
     .ant-form-item {
       margin-bottom: 12px;
     }
-    
+
     // 折叠面板样式
     .ant-collapse {
       border: none;
       background: transparent;
-      
+
       .ant-collapse-item {
         border-bottom: 1px solid #f0f0f0;
-        
+
         &:last-child {
           border-bottom: none;
         }
       }
     }
+
+    // 坐标点编辑器容器
+    .point-editor {
+      display: flex;
+      gap: 4px;
+      width: 100%;
+    }
+
+    // 可拖拽数值输入 — 显示态
+    .drag-number-input {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+      height: 24px;
+      padding: 0 4px 0 6px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      cursor: ew-resize;
+      user-select: none;
+      font-size: 12px;
+      line-height: 22px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &:hover {
+        border-color: #4096ff;
+      }
+
+      &:active {
+        border-color: #4096ff;
+        box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+      }
+
+      .drag-number-label {
+        color: #999;
+        font-weight: 600;
+        margin-right: 4px;
+        flex-shrink: 0;
+      }
+
+      .drag-number-value {
+        flex: 1;
+        min-width: 0;
+        color: #333;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .drag-number-handle {
+        color: #bbb;
+        font-size: 10px;
+        flex-shrink: 0;
+        margin-left: 2px;
+      }
+    }
+
+    // 可拖拽数值输入 — 编辑态
+    .drag-number-wrapper {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+      height: 24px;
+      padding: 0 4px 0 6px;
+      border: 1px solid #4096ff;
+      border-radius: 4px;
+      box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+
+      .drag-number-label {
+        color: #999;
+        font-weight: 600;
+        margin-right: 4px;
+        flex-shrink: 0;
+      }
+
+      .drag-number-editing {
+        flex: 1;
+        min-width: 0;
+        height: 22px;
+        padding: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 12px;
+        color: #333;
+      }
+    }
   }
-} 
+}
