@@ -1,7 +1,5 @@
 /* eslint-disable no-var */
 
-/// <reference path="../../node_modules/paper/dist/paper.d.ts" />
-
 // Paper.js 相关类型定义
 interface PaperScopeData {
   scope: any;
