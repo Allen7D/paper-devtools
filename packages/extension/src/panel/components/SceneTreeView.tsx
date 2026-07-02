@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Button, Input, Select, Tag, Tooltip } from 'antd';
-import { ReloadOutlined, EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined, FilterOutlined, SwapOutlined } from '@ant-design/icons';
+import { EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined, FilterOutlined, SwapOutlined } from '@ant-design/icons';
 
 import { usePaperStore, PaperNode } from '../store';
 import { TreeNode } from './TreeNode';
@@ -166,7 +166,6 @@ export const SceneTreeView: React.FC = () => {
             type={overlayEnabled ? 'primary' : 'default'}
           />
         </Tooltip>
-        <Button onClick={refreshSceneTree} icon={<ReloadOutlined />} size="small" />
       </div>
       <div className="scene-tree-filters">
         <Select
