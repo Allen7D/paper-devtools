@@ -71,8 +71,8 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   expandedNodes: new Set<string>(),
   availableScopes: [],
   activeScopeId: null,
-  overlayEnabled: true,
-  pickerEnabled: false,
+  overlayEnabled: false,
+  pickerEnabled: true,
   searchQuery: '',
   typeFilter: [],
   visibilityFilter: 'all',
@@ -101,6 +101,10 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
           });
           get().refreshSceneTree();
           get().getAvailableScopes();
+          // 同步初始状态到页面
+          const { overlayEnabled, pickerEnabled } = get();
+          sendToTab({ action: PANEL_ACTION.SET_OVERLAY_ENABLED, enabled: overlayEnabled }, () => { });
+          sendToTab({ action: pickerEnabled ? PANEL_ACTION.ENABLE_PICKER : PANEL_ACTION.DISABLE_PICKER }, () => { });
         } else {
           set({
             connected: false,
