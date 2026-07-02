@@ -41,6 +41,12 @@ const detectPropertyType = (propName: string, propValue: any): string => {
     return 'angle';
   }
 
+  // 矩形属性（必须先于 point/size 检测，因为矩形同时包含 x/y 和 width/height）
+  if (typeof propValue === 'object' && propValue !== null &&
+    ('x' in propValue && 'y' in propValue && 'width' in propValue && 'height' in propValue)) {
+    return 'rectangle';
+  }
+
   // 坐标点属性
   if (typeof propValue === 'object' && propValue !== null &&
     ('x' in propValue && 'y' in propValue)) {
@@ -51,12 +57,6 @@ const detectPropertyType = (propName: string, propValue: any): string => {
   if (typeof propValue === 'object' && propValue !== null &&
     ('width' in propValue && 'height' in propValue)) {
     return 'size';
-  }
-
-  // 矩形属性
-  if (typeof propValue === 'object' && propValue !== null &&
-    ('x' in propValue && 'y' in propValue && 'width' in propValue && 'height' in propValue)) {
-    return 'rectangle';
   }
 
   // 数组属性
@@ -261,6 +261,34 @@ const SizeEditor: React.FC<{ value: any; onChange: (value: any) => void }> = ({ 
   );
 };
 
+// 矩形编辑器（x, y, width, height）
+const RectangleEditor: React.FC<{ value: any; onChange: (value: any) => void }> = ({ value, onChange }) => {
+  return (
+    <div className="point-editor">
+      <DragNumberInput
+        label="X"
+        value={value.x}
+        onChange={(x) => onChange({ ...value, x })}
+      />
+      <DragNumberInput
+        label="Y"
+        value={value.y}
+        onChange={(y) => onChange({ ...value, y })}
+      />
+      <DragNumberInput
+        label="W"
+        value={value.width}
+        onChange={(width) => onChange({ ...value, width })}
+      />
+      <DragNumberInput
+        label="H"
+        value={value.height}
+        onChange={(height) => onChange({ ...value, height })}
+      />
+    </div>
+  );
+};
+
 // 对象编辑器（折叠面板形式）
 const ObjectEditor: React.FC<{
   value: any;
@@ -360,6 +388,9 @@ const PropertyEditor: React.FC<{
             tooltip={{ formatter: (val) => `${val}°` }}
           />
         );
+
+      case 'rectangle':
+        return <RectangleEditor value={propValue} onChange={handleChange} />;
 
       case 'point':
         return <PointEditor value={propValue} onChange={handleChange} />;

@@ -726,6 +726,17 @@ window.addEventListener(INJECT_EVENT.PAPER_DEVTOOLS_MESSAGE, function (event) {
               item.fillColor = message.value;
             } else if (message.property === "strokeColor") {
               item.strokeColor = message.value;
+            } else if (
+              message.property === "bounds" &&
+              typeof message.value === "object"
+            ) {
+              // Paper.js bounds setter 通过缩放/平移来匹配新边界
+              item.bounds = {
+                x: message.value.x,
+                y: message.value.y,
+                width: message.value.width,
+                height: message.value.height,
+              } as any;
             } else {
               item.set({
                 [message.property]: message.value
