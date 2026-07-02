@@ -16,6 +16,7 @@ import {
 } from 'antd';
 import type { Color } from 'antd/es/color-picker';
 import { usePaperStore } from '../store';
+import { useThrottledCallback } from '../hooks/useThrottledCallback';
 
 import './PropertiesPanel.less';
 
@@ -325,6 +326,9 @@ const PropertyEditor: React.FC<{
     }
   };
 
+  // Slider 拖拽场景节流（opacity / angle），避免高频 chrome 消息往返
+  const throttledHandleChange = useThrottledCallback(handleChange, 80);
+
   // 根据属性类型智能选择编辑器
   const renderEditor = () => {
     const propertyType = detectPropertyType(propName, propValue);
@@ -340,7 +344,7 @@ const PropertyEditor: React.FC<{
             max={1}
             step={0.01}
             value={propValue}
-            onChange={handleChange}
+            onChange={throttledHandleChange}
             tooltip={{ formatter: (val) => `${Math.round((val || 0) * 100)}%` }}
           />
         );
@@ -352,7 +356,7 @@ const PropertyEditor: React.FC<{
             max={360}
             step={1}
             value={propValue}
-            onChange={handleChange}
+            onChange={throttledHandleChange}
             tooltip={{ formatter: (val) => `${val}°` }}
           />
         );
