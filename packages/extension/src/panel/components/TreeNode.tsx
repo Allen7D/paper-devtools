@@ -38,7 +38,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
     hoveredNode,
     hoverNode,
     clearHover,
-    overlayEnabled
   } = usePaperStore();
 
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -74,15 +73,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
   };
 
   const handleMouseEnter = () => {
-    if (overlayEnabled) {
-      hoverNode(node.id);
-    }
+    hoverNode(node.id);
   };
 
   const handleMouseLeave = () => {
-    if (overlayEnabled) {
-      clearHover();
-    }
+    clearHover();
   };
 
   const handleToggleVisibility = (e: React.MouseEvent) => {

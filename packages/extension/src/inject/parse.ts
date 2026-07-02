@@ -199,13 +199,13 @@ function updateOverlayPosition(type: 'selected' | 'hover', nodeId: string) {
 }
 
 function syncAllOverlays() {
-  if (!overlayEnabled) return;
-  if (highlightedNodeId) updateOverlayPosition('selected', highlightedNodeId);
+  if (overlayEnabled && highlightedNodeId) updateOverlayPosition('selected', highlightedNodeId);
   if (hoveredNodeId) updateOverlayPosition('hover', hoveredNodeId);
 }
 
 function showHighlight(nodeId: string, type: 'selected' | 'hover') {
-  if (!overlayEnabled) return;
+  // overlayEnabled only controls the selected overlay; hover overlay is for picker
+  if (type === 'selected' && !overlayEnabled) return;
 
   const item = findPaperItemById(nodeId);
   if (!item) return;
@@ -252,7 +252,14 @@ function clearAllOverlays() {
 function setOverlayEnabled(enabled: boolean) {
   overlayEnabled = enabled;
   if (!enabled) {
-    clearAllOverlays();
+    // Only hide selected overlay; hover overlay is for picker and works independently
+    if (selectedOverlay) {
+      selectedOverlay.style.display = 'none';
+    }
+  } else if (highlightedNodeId) {
+    // Re-show selected overlay if there's a highlighted node
+    if (!selectedOverlay) selectedOverlay = createOverlayElement('selected');
+    updateOverlayPosition('selected', highlightedNodeId);
   }
 }
 
