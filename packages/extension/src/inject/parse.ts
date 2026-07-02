@@ -1,5 +1,11 @@
 import { extractItemProperties, extractProjectProperties } from "./extra";
 import { ScopeProjectNode, ScopeTreeNode } from "types";
+import {
+  HIGHLIGHT_TYPE,
+  type HighlightType,
+  INJECT_EVENT,
+  PANEL_ACTION,
+} from "@/shared/constants";
 
 /**
  * 根据 paper.js Project 实例构建场景树根节点。
@@ -253,17 +259,17 @@ function positionOverlay(overlay: HTMLDivElement, item: paper.Item) {
 /**
  * 创建高亮覆盖层元素并添加到容器中。
  *
- * - `selected` 类型：红色实线边框，用于标记当前选中的图元
- * - `hover` 类型：蓝色虚线边框，用于拾取器模式下的悬停预览
+ * - `SELECTED` 类型：红色实线边框，用于标记当前选中的图元
+ * - `HOVER` 类型：蓝色虚线边框，用于拾取器模式下的悬停预览
  *
- * @param type - 覆盖层类型：`'selected'` 或 `'hover'`
+ * @param type - 覆盖层类型
  * @returns 创建的覆盖层 div 元素
  */
-function createOverlayElement(type: 'selected' | 'hover'): HTMLDivElement {
+function createOverlayElement(type: HighlightType): HTMLDivElement {
   const el = document.createElement('div');
   el.className = `__paper_devtools_overlay_${type}__`;
 
-  if (type === 'selected') {
+  if (type === HIGHLIGHT_TYPE.SELECTED) {
     el.style.cssText =
       'position:absolute;pointer-events:none;border:2px solid rgba(245,80,60,0.9);background:rgba(245,80,60,0.08);border-radius:2px;transition:left 0.05s,top 0.05s,width 0.05s,height 0.05s;display:none;';
   } else {
@@ -278,14 +284,14 @@ function createOverlayElement(type: 'selected' | 'hover'): HTMLDivElement {
 /**
  * 更新指定类型覆盖层的位置，使其跟随对应节点图元。
  *
- * @param type - 覆盖层类型：`'selected'` 或 `'hover'`
+ * @param type - 覆盖层类型
  * @param nodeId - 目标节点 ID
  */
-function updateOverlayPosition(type: 'selected' | 'hover', nodeId: string) {
+function updateOverlayPosition(type: HighlightType, nodeId: string) {
   const item = findPaperItemById(nodeId);
   if (!item) return;
 
-  const overlay = type === 'selected' ? selectedOverlay : hoverOverlay;
+  const overlay = type === HIGHLIGHT_TYPE.SELECTED ? selectedOverlay : hoverOverlay;
   if (!overlay) return;
 
   positionOverlay(overlay, item);
@@ -298,32 +304,32 @@ function updateOverlayPosition(type: 'selected' | 'hover', nodeId: string) {
  * 覆盖层始终与图元位置保持一致。
  */
 function syncAllOverlays() {
-  if (overlayEnabled && highlightedNodeId) updateOverlayPosition('selected', highlightedNodeId);
-  if (hoveredNodeId) updateOverlayPosition('hover', hoveredNodeId);
+  if (overlayEnabled && highlightedNodeId) updateOverlayPosition(HIGHLIGHT_TYPE.SELECTED, highlightedNodeId);
+  if (hoveredNodeId) updateOverlayPosition(HIGHLIGHT_TYPE.HOVER, hoveredNodeId);
 }
 
 /**
  * 显示指定节点的高亮覆盖层。
  *
- * - `selected` 类型受 `overlayEnabled` 开关控制
- * - `hover` 类型用于拾取器模式，独立于 `overlayEnabled` 开关
+ * - `SELECTED` 类型受 `overlayEnabled` 开关控制
+ * - `HOVER` 类型用于拾取器模式，独立于 `overlayEnabled` 开关
  *
  * @param nodeId - 要高亮的节点 ID
- * @param type - 高亮类型：`'selected'` 或 `'hover'`
+ * @param type - 高亮类型
  */
-function showHighlight(nodeId: string, type: 'selected' | 'hover') {
+function showHighlight(nodeId: string, type: HighlightType) {
   // overlayEnabled only controls the selected overlay; hover overlay is for picker
-  if (type === 'selected' && !overlayEnabled) return;
+  if (type === HIGHLIGHT_TYPE.SELECTED && !overlayEnabled) return;
 
   const item = findPaperItemById(nodeId);
   if (!item) return;
 
-  if (type === 'selected') {
-    if (!selectedOverlay) selectedOverlay = createOverlayElement('selected');
+  if (type === HIGHLIGHT_TYPE.SELECTED) {
+    if (!selectedOverlay) selectedOverlay = createOverlayElement(HIGHLIGHT_TYPE.SELECTED);
     positionOverlay(selectedOverlay, item);
     highlightedNodeId = nodeId;
   } else {
-    if (!hoverOverlay) hoverOverlay = createOverlayElement('hover');
+    if (!hoverOverlay) hoverOverlay = createOverlayElement(HIGHLIGHT_TYPE.HOVER);
     positionOverlay(hoverOverlay, item);
     hoveredNodeId = nodeId;
   }
@@ -332,14 +338,14 @@ function showHighlight(nodeId: string, type: 'selected' | 'hover') {
 /**
  * 隐藏指定类型的高亮覆盖层。
  *
- * @param type - 要隐藏的覆盖层类型：`'selected'` 或 `'hover'`
+ * @param type - 要隐藏的覆盖层类型
  */
-function hideHighlight(type: 'selected' | 'hover') {
-  if (type === 'selected' && selectedOverlay) {
+function hideHighlight(type: HighlightType) {
+  if (type === HIGHLIGHT_TYPE.SELECTED && selectedOverlay) {
     selectedOverlay.style.display = 'none';
     highlightedNodeId = null;
   }
-  if (type === 'hover' && hoverOverlay) {
+  if (type === HIGHLIGHT_TYPE.HOVER && hoverOverlay) {
     hoverOverlay.style.display = 'none';
     hoveredNodeId = null;
   }
@@ -372,7 +378,7 @@ function clearAllOverlays() {
  * 设置选中高亮覆盖层的启用/禁用状态。
  *
  * 禁用时隐藏当前选中覆盖层；重新启用时若有高亮节点则恢复显示。
- * 注意：此开关仅影响 `selected` 类型覆盖层，不影响拾取器的 `hover` 覆盖层。
+ * 注意：此开关仅影响 `SELECTED` 类型覆盖层，不影响拾取器的 `HOVER` 覆盖层。
  *
  * @param enabled - 是否启用选中高亮覆盖层
  */
@@ -385,8 +391,8 @@ function setOverlayEnabled(enabled: boolean) {
     }
   } else if (highlightedNodeId) {
     // Re-show selected overlay if there's a highlighted node
-    if (!selectedOverlay) selectedOverlay = createOverlayElement('selected');
-    updateOverlayPosition('selected', highlightedNodeId);
+    if (!selectedOverlay) selectedOverlay = createOverlayElement(HIGHLIGHT_TYPE.SELECTED);
+    updateOverlayPosition(HIGHLIGHT_TYPE.SELECTED, highlightedNodeId);
   }
 }
 
@@ -525,10 +531,10 @@ function enablePicker() {
     if (hitResult && hitResult.item) {
       const nodeId = findNodeIdByItem(hitResult.item);
       if (nodeId) {
-        showHighlight(nodeId, 'hover');
+        showHighlight(nodeId, HIGHLIGHT_TYPE.HOVER);
       }
     } else {
-      hideHighlight('hover');
+      hideHighlight(HIGHLIGHT_TYPE.HOVER);
     }
   };
 
@@ -542,7 +548,7 @@ function enablePicker() {
         if (currentItem && currentItem.parent) {
           const parentItemId = findNodeIdByItem(currentItem.parent);
           if (parentItemId) {
-            window.dispatchEvent(new CustomEvent('PAPER_PICKER_RESULT', {
+            window.dispatchEvent(new CustomEvent(INJECT_EVENT.PAPER_PICKER_RESULT, {
               detail: { nodeId: parentItemId, deselect: false },
             }));
           }
@@ -567,7 +573,7 @@ function enablePicker() {
     if (hitResult && hitResult.item) {
       const nodeId = findNodeIdByItem(hitResult.item);
       if (nodeId) {
-        window.dispatchEvent(new CustomEvent('PAPER_PICKER_RESULT', {
+        window.dispatchEvent(new CustomEvent(INJECT_EVENT.PAPER_PICKER_RESULT, {
           detail: { nodeId, deselect: nodeId === highlightedNodeId },
         }));
       }
@@ -603,13 +609,13 @@ function disablePicker() {
     pickerClickHandler = null;
   }
 
-  hideHighlight('hover');
+  hideHighlight(HIGHLIGHT_TYPE.HOVER);
 }
 
 /**
  * 监听 `PAPER_SCENE_CHANGED` 事件，场景变化时同步更新所有覆盖层位置。
  */
-window.addEventListener('PAPER_SCENE_CHANGED', () => {
+window.addEventListener(INJECT_EVENT.PAPER_SCENE_CHANGED, () => {
   syncAllOverlays();
 });
 
@@ -630,7 +636,7 @@ window.addEventListener('scroll', () => {
 /**
  * 监听 `PAPER_SCOPE_CHANGE` 事件，Scope 切换时清除所有覆盖层并重新绑定 Canvas 点击监听。
  */
-window.addEventListener('PAPER_SCOPE_CHANGE', () => {
+window.addEventListener(INJECT_EVENT.PAPER_SCOPE_CHANGE, () => {
   clearAllOverlays();
   if (autoSwitchScope) {
     setupCanvasClickListeners();
@@ -662,12 +668,12 @@ window.addEventListener('PAPER_SCOPE_CHANGE', () => {
  * | `SET_AUTO_SWITCH_SCOPE` | 启用/禁用点击 Canvas 自动切换 Scope |
  * | `GET_AUTO_SWITCH_SCOPE` | 获取自动切换 Scope 的启用状态 |
  */
-window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
+window.addEventListener(INJECT_EVENT.PAPER_DEVTOOLS_MESSAGE, function (event) {
   const message = (event as any).detail;
   if (!message || !message.action) return;
   let response = null;
   switch (message.action) {
-    case "GET_SCENE_TREE":
+    case PANEL_ACTION.GET_SCENE_TREE:
       {
         const project = getActiveProject();
         if (project) {
@@ -676,7 +682,7 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         }
       }
       break;
-    case "SELECT_NODE":
+    case PANEL_ACTION.SELECT_NODE:
       if (message.nodeId) {
         const item = findPaperItemById(message.nodeId);
         if (item) {
@@ -686,13 +692,13 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
           }
           const node = buildScopeTree(item, message.nodeId);
           response = { node };
-          showHighlight(message.nodeId, 'selected');
+          showHighlight(message.nodeId, HIGHLIGHT_TYPE.SELECTED);
           (window as any).$paper = item;
           console.log('%c[Paper DevTools]%c 选中图元:', 'color:#f5503c;font-weight:bold', 'color:inherit', item);
         }
       }
       break;
-    case "TOGGLE_NODE_VISIBILITY":
+    case PANEL_ACTION.TOGGLE_NODE_VISIBILITY:
       if (message.nodeId) {
         const item = findPaperItemById(message.nodeId);
         if (item && item.visible !== undefined) {
@@ -705,7 +711,7 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         }
       }
       break;
-    case "UPDATE_NODE_PROPERTY":
+    case PANEL_ACTION.UPDATE_NODE_PROPERTY:
       if (message.nodeId && message.property) {
         const item = findPaperItemById(message.nodeId);
         if (item) {
@@ -737,7 +743,7 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         }
       }
       break;
-    case "GET_AVAILABLE_SCOPES":
+    case PANEL_ACTION.GET_AVAILABLE_SCOPES:
       if (window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.getAllScopes) {
         const rawScopes = window.__PAPER_SCOPES__.getAllScopes();
         const scopes = rawScopes.map((item) => ({
@@ -751,13 +757,13 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         };
       }
       break;
-    case "SET_ACTIVE_SCOPE":
+    case PANEL_ACTION.SET_ACTIVE_SCOPE:
       if (message.scopeId && window.__PAPER_SCOPES__ && window.__PAPER_SCOPES__.switchScope) {
         const success = window.__PAPER_SCOPES__.switchScope(message.scopeId);
         response = { success };
       }
       break;
-    case "GET_NODE_INFO":
+    case PANEL_ACTION.GET_NODE_INFO:
       if (message.nodeId) {
         const item = findPaperItemById(message.nodeId);
         if (item) {
@@ -766,45 +772,45 @@ window.addEventListener("PAPER_DEVTOOLS_MESSAGE", function (event) {
         }
       }
       break;
-    case "HIGHLIGHT_NODE":
+    case PANEL_ACTION.HIGHLIGHT_NODE:
       if (message.nodeId) {
-        showHighlight(message.nodeId, message.type || 'selected');
+        showHighlight(message.nodeId, message.type || HIGHLIGHT_TYPE.SELECTED);
         response = { success: true };
       }
       break;
-    case "CLEAR_HIGHLIGHT":
-      hideHighlight(message.type || 'hover');
+    case PANEL_ACTION.CLEAR_HIGHLIGHT:
+      hideHighlight(message.type || HIGHLIGHT_TYPE.HOVER);
       response = { success: true };
       break;
-    case "SET_OVERLAY_ENABLED":
+    case PANEL_ACTION.SET_OVERLAY_ENABLED:
       setOverlayEnabled(message.enabled);
       response = { success: true };
       break;
-    case "ENABLE_PICKER":
+    case PANEL_ACTION.ENABLE_PICKER:
       enablePicker();
       response = { success: true };
       break;
-    case "DISABLE_PICKER":
+    case PANEL_ACTION.DISABLE_PICKER:
       disablePicker();
       response = { success: true };
       break;
-    case "DEVTOOLS_CLEANUP":
+    case PANEL_ACTION.DEVTOOLS_CLEANUP:
       disablePicker();
       clearAllOverlays();
       (window as any).$paper = undefined;
       response = { success: true };
       break;
-    case "SET_AUTO_SWITCH_SCOPE":
+    case PANEL_ACTION.SET_AUTO_SWITCH_SCOPE:
       setAutoSwitchScope(message.enabled);
       response = { success: true };
       break;
-    case "GET_AUTO_SWITCH_SCOPE":
+    case PANEL_ACTION.GET_AUTO_SWITCH_SCOPE:
       response = { enabled: autoSwitchScope };
       break;
   }
   if (response) {
     window.dispatchEvent(
-      new CustomEvent("PAPER_DEVTOOLS_RESPONSE", {
+      new CustomEvent(INJECT_EVENT.PAPER_DEVTOOLS_RESPONSE, {
         detail: {
           id: message.id,
           response,

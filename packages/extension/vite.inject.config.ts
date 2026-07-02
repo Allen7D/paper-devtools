@@ -8,6 +8,11 @@ export default defineConfig((config) => {
 
   return {
     root: resolve(__dirname, 'src/'),
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src'),
+      },
+    },
     plugins: [
       {
         name: 'wrap-in-iife',

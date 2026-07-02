@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { HIGHLIGHT_TYPE, PANEL_ACTION, RUNTIME_ACTION } from '@/shared/constants';
 
 export interface PaperNode {
   id: string;
@@ -84,7 +85,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
       const tabId = tabs[0]?.id;
       if (!tabId) return;
 
-      chrome.tabs.sendMessage(tabId, { action: 'DETECT_PAPER_JS' }, (response) => {
+      chrome.tabs.sendMessage(tabId, { action: PANEL_ACTION.DETECT_PAPER_JS }, (response) => {
         if (chrome.runtime.lastError) {
           set({
             connected: false,
@@ -112,7 +113,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     if (!scopeChangeListenerAdded) {
       scopeChangeListenerAdded = true;
       chrome.runtime.onMessage.addListener((message) => {
-        if (message.action === 'SCOPE_CHANGE') {
+        if (message.action === RUNTIME_ACTION.SCOPE_CHANGE) {
           set({
             availableScopes: message.scopes || [],
             activeScopeId: message.activeScopeId || null,
@@ -139,15 +140,15 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
           }
         }
 
-        if (message.action === 'SCENE_CHANGE') {
+        if (message.action === RUNTIME_ACTION.SCENE_CHANGE) {
           get().refreshSceneTree();
           get().refreshSelectedNode();
         }
 
-        if (message.action === 'PICKER_RESULT' && message.nodeId) {
+        if (message.action === RUNTIME_ACTION.PICKER_RESULT && message.nodeId) {
           if (message.deselect) {
             set({ selectedNode: null });
-            sendToTab({ action: 'CLEAR_HIGHLIGHT', type: 'selected' }, () => { });
+            sendToTab({ action: PANEL_ACTION.CLEAR_HIGHLIGHT, type: HIGHLIGHT_TYPE.SELECTED }, () => { });
           } else {
             get().selectNode(message.nodeId);
           }
@@ -157,7 +158,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   },
 
   refreshSceneTree: () => {
-    sendToTab({ action: 'GET_SCENE_TREE' }, (response) => {
+    sendToTab({ action: PANEL_ACTION.GET_SCENE_TREE }, (response) => {
       if (chrome.runtime.lastError || !response) {
         set({
           connected: false,
@@ -177,12 +178,12 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     const { selectedNode } = get();
     if (selectedNode?.id === nodeId) {
       set({ selectedNode: null });
-      sendToTab({ action: 'CLEAR_HIGHLIGHT', type: 'selected' }, () => { });
+      sendToTab({ action: PANEL_ACTION.CLEAR_HIGHLIGHT, type: HIGHLIGHT_TYPE.SELECTED }, () => { });
       return;
     }
 
     sendToTab({
-      action: 'SELECT_NODE',
+      action: PANEL_ACTION.SELECT_NODE,
       nodeId
     }, (response) => {
       if (response && response.node) {
@@ -202,7 +203,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
 
   toggleNodeVisibility: (nodeId: string) => {
     sendToTab({
-      action: 'TOGGLE_NODE_VISIBILITY',
+      action: PANEL_ACTION.TOGGLE_NODE_VISIBILITY,
       nodeId
     }, (response) => {
       if (response && response.sceneTree) {
@@ -225,7 +226,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
 
   updateNodeProperty: (nodeId: string, property: string, value: any) => {
     sendToTab({
-      action: 'UPDATE_NODE_PROPERTY',
+      action: PANEL_ACTION.UPDATE_NODE_PROPERTY,
       nodeId,
       property,
       value
@@ -238,7 +239,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   },
 
   getAvailableScopes: () => {
-    sendToTab({ action: 'GET_AVAILABLE_SCOPES' }, (response) => {
+    sendToTab({ action: PANEL_ACTION.GET_AVAILABLE_SCOPES }, (response) => {
       if (response && response.scopes) {
         set({
           availableScopes: response.scopes,
@@ -250,7 +251,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
 
   setActiveScope: (scopeId: string) => {
     sendToTab({
-      action: 'SET_ACTIVE_SCOPE',
+      action: PANEL_ACTION.SET_ACTIVE_SCOPE,
       scopeId,
     }, (response) => {
       if (response && response.success) {
@@ -268,7 +269,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     if (!selectedNode) return;
 
     sendToTab({
-      action: 'GET_NODE_INFO',
+      action: PANEL_ACTION.GET_NODE_INFO,
       nodeId: selectedNode.id,
     }, (response) => {
       if (response && response.node) {
@@ -280,24 +281,24 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   hoverNode: (nodeId: string) => {
     set({ hoveredNode: { id: nodeId } as PaperNode });
     sendToTab({
-      action: 'HIGHLIGHT_NODE',
+      action: PANEL_ACTION.HIGHLIGHT_NODE,
       nodeId,
-      type: 'hover',
+      type: HIGHLIGHT_TYPE.HOVER,
     }, () => { });
   },
 
   clearHover: () => {
     set({ hoveredNode: null });
     sendToTab({
-      action: 'CLEAR_HIGHLIGHT',
-      type: 'hover',
+      action: PANEL_ACTION.CLEAR_HIGHLIGHT,
+      type: HIGHLIGHT_TYPE.HOVER,
     }, () => { });
   },
 
   setOverlayEnabled: (enabled: boolean) => {
     set({ overlayEnabled: enabled });
     sendToTab({
-      action: 'SET_OVERLAY_ENABLED',
+      action: PANEL_ACTION.SET_OVERLAY_ENABLED,
       enabled,
     }, () => { });
   },
@@ -307,7 +308,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     const nextEnabled = !pickerEnabled;
     set({ pickerEnabled: nextEnabled });
     sendToTab({
-      action: nextEnabled ? 'ENABLE_PICKER' : 'DISABLE_PICKER',
+      action: nextEnabled ? PANEL_ACTION.ENABLE_PICKER : PANEL_ACTION.DISABLE_PICKER,
     }, () => { });
   },
 
@@ -348,7 +349,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   setAutoSwitchScope: (enabled: boolean) => {
     set({ autoSwitchScope: enabled });
     sendToTab({
-      action: 'SET_AUTO_SWITCH_SCOPE',
+      action: PANEL_ACTION.SET_AUTO_SWITCH_SCOPE,
       enabled,
     }, () => { });
   },
