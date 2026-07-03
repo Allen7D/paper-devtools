@@ -89,6 +89,11 @@
   overflow: auto;
   padding: 8px;
 }
+.scene-tree-container .scene-tree-content:focus,
+.scene-tree-container .scene-tree-content:focus-visible {
+  outline: 2px solid rgba(64, 150, 255, 0.3);
+  outline-offset: -2px;
+}
 .scene-tree-container .scene-tree-content::-webkit-scrollbar {
   width: 6px;
 }

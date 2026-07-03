@@ -7,6 +7,8 @@ import {
   FilterOutlined,
   CaretRightOutlined,
   ReloadOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
 import { Tag } from 'antd';
 
@@ -54,6 +56,18 @@ const HelpContent: React.FC = () => (
             <Tag className="help-vis-tag" color="red">隐</Tag>
             显隐切换 — 切换显示全部/仅可见/仅隐藏节点
           </li>
+        </ul>
+
+        <h3>键盘导航</h3>
+        <ul>
+          <li><Kbd>↑</Kbd> <Kbd>↓</Kbd> — 上下移动选中节点</li>
+          <li><Kbd>←</Kbd> <Kbd>→</Kbd> — 折叠/展开节点，或跳转至父/子节点</li>
+        </ul>
+
+        <h3>节点导航</h3>
+        <ul>
+          <li>面包屑 — 属性面板顶部显示祖先链，点击任一级跳转选中该节点</li>
+          <li><Icon><LeftOutlined /></Icon> <Icon><RightOutlined /></Icon> 后退/前进 — 在最近选中的节点间切换（切换画布时自动清空历史）</li>
         </ul>
       </div>
 

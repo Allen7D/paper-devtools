@@ -102,6 +102,12 @@
     overflow: auto;
     padding: 8px;
 
+    &:focus,
+    &:focus-visible {
+      outline: 2px solid rgba(64, 150, 255, 0.3);
+      outline-offset: -2px;
+    }
+
     &::-webkit-scrollbar {
       width: 6px;
     }

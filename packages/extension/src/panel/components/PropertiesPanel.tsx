@@ -12,12 +12,14 @@ import {
   ColorPicker,
   Collapse,
   Tooltip,
+  Button,
   message
 } from 'antd';
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import { QuestionCircleOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import type { Color } from 'antd/es/color-picker';
 import { usePaperStore } from '../store';
 import { useThrottledCallback } from '../hooks/useThrottledCallback';
+import { getAncestorChain } from '../utils/navigation';
 import ThrottledSlider from './ThrottledSlider';
 
 import './PropertiesPanel.less';
@@ -480,7 +482,7 @@ const PropertyEditor: React.FC<{
 
 // 主属性面板组件
 export const PropertiesPanel: React.FC = () => {
-  const { selectedNode } = usePaperStore();
+  const { selectedNode, sceneTree, goBack, goForward, canGoBack, canGoForward, selectNode } = usePaperStore();
 
   if (!selectedNode) {
     return (
@@ -501,6 +503,34 @@ export const PropertiesPanel: React.FC = () => {
   return (
     <div className="properties-panel">
       <div className="properties-content">
+        {/* 导航栏 */}
+        <div className="node-navigation-bar">
+          <div className="nav-buttons">
+            <Tooltip title="后退">
+              <Button size="small" type="text" icon={<LeftOutlined />} disabled={!canGoBack} onClick={goBack} />
+            </Tooltip>
+            <Tooltip title="前进">
+              <Button size="small" type="text" icon={<RightOutlined />} disabled={!canGoForward} onClick={goForward} />
+            </Tooltip>
+          </div>
+          <div className="breadcrumb">
+            {getAncestorChain(selectedNode.id, sceneTree).map((item, index, arr) => {
+              const isCurrent = index === arr.length - 1;
+              const label = item.name || item.type;
+              return (
+                <React.Fragment key={item.id}>
+                  {index > 0 && <span className="breadcrumb-separator">/</span>}
+                  {isCurrent ? (
+                    <span className="breadcrumb-current">{label}</span>
+                  ) : (
+                    <span className="breadcrumb-item" onClick={() => selectNode(item.id)}>{label}</span>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+
         {/* 节点基本信息 */}
         <Card size="small" title={
           <Space>

@@ -4,6 +4,7 @@ import { EyeOutlined, EyeInvisibleOutlined, AimOutlined, SearchOutlined, FilterO
 
 import { usePaperStore, PaperNode } from '../store';
 import { TreeNode } from './TreeNode';
+import { getVisibleNodeIds } from '../utils/navigation';
 
 import './SceneTreeView.less';
 
@@ -88,6 +89,9 @@ export const SceneTreeView: React.FC = () => {
     setVisibilityFilter,
     autoSwitchScope,
     setAutoSwitchScope,
+    expandedNodes,
+    selectNode,
+    toggleNodeExpanded,
   } = usePaperStore();
 
   useEffect(() => {
@@ -105,6 +109,93 @@ export const SceneTreeView: React.FC = () => {
     if (!sceneTree) return null;
     return filterTree(sceneTree, { searchQuery, typeFilter, visibilityFilter });
   }, [sceneTree, searchQuery, typeFilter, visibilityFilter]);
+
+  const visibleNodeIds = useMemo(() => {
+    if (!filteredTree) return [];
+    return getVisibleNodeIds(filteredTree, expandedNodes);
+  }, [filteredTree, expandedNodes]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const { selectedNode, expandedNodes } = usePaperStore.getState();
+    // 防止输入框等可编辑元素被拦截
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return;
+    }
+
+    const currentId = selectedNode?.id;
+    const visibleIds = visibleNodeIds;
+
+    switch (e.key) {
+      case 'ArrowDown': {
+        e.preventDefault();
+        if (!currentId || visibleIds.length === 0) {
+          // 无选中时，选中第一个
+          if (visibleIds.length > 0) selectNode(visibleIds[0]);
+          return;
+        }
+        const idx = visibleIds.indexOf(currentId);
+        if (idx >= 0 && idx < visibleIds.length - 1) {
+          selectNode(visibleIds[idx + 1]);
+        } else if (idx === -1 && visibleIds.length > 0) {
+          // 当前选中不在可见列表中（可能被过滤），选第一个
+          selectNode(visibleIds[0]);
+        }
+        break;
+      }
+      case 'ArrowUp': {
+        e.preventDefault();
+        if (!currentId || visibleIds.length === 0) return;
+        const idx = visibleIds.indexOf(currentId);
+        if (idx > 0) {
+          selectNode(visibleIds[idx - 1]);
+        } else if (idx === -1 && visibleIds.length > 0) {
+          selectNode(visibleIds[0]);
+        }
+        break;
+      }
+      case 'ArrowLeft': {
+        e.preventDefault();
+        if (!currentId) return;
+        // 已展开则折叠
+        if (expandedNodes.has(currentId)) {
+          toggleNodeExpanded(currentId);
+        } else {
+          // 已折叠则选中父节点（由 ID 路径推导）
+          const parts = currentId.split('_');
+          if (parts.length > 1) {
+            const parentId = parts.slice(0, -1).join('_');
+            selectNode(parentId);
+          }
+        }
+        break;
+      }
+      case 'ArrowRight': {
+        e.preventDefault();
+        if (!currentId || !filteredTree) return;
+        // 在 filteredTree 中查找当前节点
+        const findNode = (node: PaperNode, id: string): PaperNode | null => {
+          if (node.id === id) return node;
+          for (const child of node.children) {
+            const found = findNode(child, id);
+            if (found) return found;
+          }
+          return null;
+        };
+        const currentNode = findNode(filteredTree, currentId);
+        if (!currentNode) return;
+        if (currentNode.children.length === 0) return; // 无子节点
+        // 已折叠则展开
+        if (!expandedNodes.has(currentId)) {
+          toggleNodeExpanded(currentId);
+        } else {
+          // 已展开则选中第一个子节点
+          selectNode(currentNode.children[0].id);
+        }
+        break;
+      }
+    }
+  };
 
   if (!connected) {
     return <div className="scene-tree-container">等待连接 Paper.js 应用...</div>;
@@ -201,7 +292,11 @@ export const SceneTreeView: React.FC = () => {
           {visibilityFilter === 'all' ? '全' : visibilityFilter === 'visible' ? '显' : '隐'}
         </span>
       </div>
-      <div className="scene-tree-content">
+      <div
+        className="scene-tree-content"
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+      >
         {filteredTree ? (
           <TreeNode node={filteredTree} level={0} searchQuery={searchQuery} />
         ) : (

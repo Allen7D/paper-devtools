@@ -77,6 +77,14 @@ interface PaperStore {
   visibilityFilter: 'all' | 'visible' | 'hidden';
   /** 点击 Canvas 时是否自动切换到对应 Scope */
   autoSwitchScope: boolean;
+  /** 选择历史栈，存储节点 ID */
+  selectionHistory: string[];
+  /** 当前历史指针位置，-1 表示空栈 */
+  historyIndex: number;
+  /** 派生状态：是否可后退（指针不在起点） */
+  canGoBack: boolean;
+  /** 派生状态：是否可前进（指针不在末尾） */
+  canGoForward: boolean;
 
   /** 初始化连接：检测 Paper.js 并注册消息监听 */
   initialize: () => void;
@@ -112,7 +120,16 @@ interface PaperStore {
   setVisibilityFilter: (filter: 'all' | 'visible' | 'hidden') => void;
   /** 启用/禁用点击 Canvas 自动切换 Scope */
   setAutoSwitchScope: (enabled: boolean) => void;
+  /** 在选择历史中后退一步，导航到上一个选中的节点 */
+  goBack: () => void;
+  /** 在选择历史中前进一步，导航到下一个选中的节点 */
+  goForward: () => void;
+  /** 清空选择历史栈并重置指针 */
+  clearSelectionHistory: () => void;
 }
+
+/** 内部导航方法类型（不在 PaperStore interface 中公开声明） */
+type NavigateToNode = (nodeId: string) => void;
 
 /** 确保运行时消息监听只注册一次的守卫标志 */
 let scopeChangeListenerAdded = false;
@@ -149,6 +166,10 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   typeFilter: [],
   visibilityFilter: 'all',
   autoSwitchScope: true,
+  selectionHistory: [],
+  historyIndex: -1,
+  canGoBack: false,
+  canGoForward: false,
 
   /**
    * 初始化连接。
@@ -208,6 +229,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
           // Scope 被移除或激活切换时，清空选中节点并刷新场景树
           if (message.type === 'removed' || message.type === 'activated') {
             set({ selectedNode: null });
+            get().clearSelectionHistory();
             get().refreshSceneTree();
           }
 
@@ -293,7 +315,18 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
             expandedNodes.add(ancestorId);
           }
           expandedNodes.add('root');
-          return { selectedNode: response.node, expandedNodes };
+          // 截断历史栈指针之后的记录，压入新选中的节点 ID
+          const newHistory = state.selectionHistory.slice(0, state.historyIndex + 1);
+          newHistory.push(nodeId);
+          const newIndex = newHistory.length - 1;
+          return {
+            selectedNode: response.node,
+            expandedNodes,
+            selectionHistory: newHistory,
+            historyIndex: newIndex,
+            canGoBack: newIndex > 0,
+            canGoForward: false, // 刚压栈，指针在末尾
+          };
         });
       }
     });
@@ -366,6 +399,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
           activeScopeId: scopeId,
           selectedNode: null,
         });
+        get().clearSelectionHistory();
         get().refreshSceneTree();
       }
     });
@@ -473,5 +507,73 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
       action: PANEL_ACTION.SET_AUTO_SWITCH_SCOPE,
       enabled,
     }, () => { });
+  },
+
+  /**
+   * 内部导航方法：导航到指定节点但不压入历史栈。
+   *
+   * 供 `goBack` / `goForward` 调用。若目标节点已是当前选中节点则直接返回；
+   * 否则发送 `SELECT_NODE` 请求，成功后更新 `selectedNode` 并展开祖先链。
+   */
+  navigateToNode: (nodeId: string) => {
+    const { selectedNode } = get();
+    if (selectedNode?.id === nodeId) return; // 已选中，无操作
+    sendToTab({
+      action: PANEL_ACTION.SELECT_NODE,
+      nodeId
+    }, (response) => {
+      if (response && response.node) {
+        set(state => {
+          const expandedNodes = new Set(state.expandedNodes);
+          const parts = nodeId.split('_');
+          for (let i = 1; i < parts.length; i++) {
+            const ancestorId = parts.slice(0, i + 1).join('_');
+            expandedNodes.add(ancestorId);
+          }
+          expandedNodes.add('root');
+          return { selectedNode: response.node, expandedNodes };
+          // 不更新 selectionHistory / historyIndex
+        });
+      }
+    });
+  },
+
+  /**
+   * 在选择历史中后退一步。
+   *
+   * 指针后移一位并导航到对应节点；指针在起点（historyIndex <= 0）时无操作。
+   */
+  goBack: () => {
+    const { historyIndex, selectionHistory } = get();
+    if (historyIndex <= 0) return;
+    const newIndex = historyIndex - 1;
+    set({
+      historyIndex: newIndex,
+      canGoBack: newIndex > 0,
+      canGoForward: newIndex < selectionHistory.length - 1,
+    });
+    (get() as PaperStore & { navigateToNode: NavigateToNode }).navigateToNode(selectionHistory[newIndex]);
+  },
+
+  /**
+   * 在选择历史中前进一步。
+   *
+   * 指针前移一位并导航到对应节点；指针在末尾（historyIndex >= length-1）时无操作。
+   */
+  goForward: () => {
+    const { historyIndex, selectionHistory } = get();
+    if (historyIndex >= selectionHistory.length - 1) return;
+    const newIndex = historyIndex + 1;
+    set({
+      historyIndex: newIndex,
+      canGoBack: newIndex > 0,
+      canGoForward: newIndex < selectionHistory.length - 1,
+    });
+    (get() as PaperStore & { navigateToNode: NavigateToNode }).navigateToNode(selectionHistory[newIndex]);
+  },
+
+  /** 清空选择历史栈并重置指针为初始状态。 */
+  clearSelectionHistory: () => {
+    set({ selectionHistory: [], historyIndex: -1, canGoBack: false, canGoForward: false });
   },
 }));
