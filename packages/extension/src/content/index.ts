@@ -15,12 +15,22 @@ function injectSceneTreeScript() {
   script.src = chrome.runtime.getURL('inject/parse.js');
   script.type = 'text/javascript';
   script.onload = function () {
+    parseScriptLoaded = true;
     script.remove();
+    // 处理在 parse.js 加载完成前积压的消息
+    while (pendingMessages.length > 0) {
+      const { message, sendResponse } = pendingMessages.shift()!;
+      sendToInjectScript(message, sendResponse);
+    }
   };
   (document.head || document.documentElement).appendChild(script);
 }
 
 let paperJsDetected = false;
+/** parse.js 是否已加载完成（确保消息分发时监听器已就绪） */
+let parseScriptLoaded = false;
+/** parse.js 加载前暂存的消息队列 */
+const pendingMessages: Array<{ message: any; sendResponse: (response: any) => void }> = [];
 
 injectDetectionScript();
 
@@ -34,6 +44,12 @@ window.addEventListener(INJECT_EVENT.PAPER_JS_DETECTED, () => {
 function sendToInjectScript(message: any, sendResponse: (response: any) => void) {
   if (!paperJsDetected) {
     sendResponse({ error: 'Paper.js 未检测到' });
+    return;
+  }
+
+  // parse.js 尚未加载完成，将消息加入队列等待处理
+  if (!parseScriptLoaded) {
+    pendingMessages.push({ message, sendResponse });
     return;
   }
 
