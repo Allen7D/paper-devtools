@@ -2,6 +2,26 @@ import { create } from 'zustand';
 import { HIGHLIGHT_TYPE, PANEL_ACTION, RUNTIME_ACTION } from '@/shared/constants';
 
 /**
+ * 将指定节点的祖先链加入 `expandedNodes` 集合，确保该节点在场景树中可见。
+ *
+ * @param includeSelf 是否同时展开节点自身。展开自身会让其子节点显示出来，仅搜索
+ *                   场景需要；选中/导航场景只展开严格祖先，避免副作用地展开一个
+ *                   本应保持折叠的父节点。
+ */
+function expandAncestorChain(
+  expandedNodes: Set<string>,
+  nodeId: string,
+  includeSelf = false
+): void {
+  const parts = nodeId.split('_');
+  const end = includeSelf ? parts.length : parts.length - 1;
+  for (let i = 1; i < end; i++) {
+    expandedNodes.add(parts.slice(0, i + 1).join('_'));
+  }
+  expandedNodes.add('root');
+}
+
+/**
  * 场景树节点。
  *
  * 对应 Paper.js 中 `Item` / `Layer` / `Group` / `Project` 等对象在 DevTools 中的镜像表示，
@@ -90,8 +110,10 @@ interface PaperStore {
   initialize: () => void;
   /** 刷新场景树（从页面重新拉取） */
   refreshSceneTree: () => void;
-  /** 选中或取消选中指定节点 */
+  /** 选中或取消选中指定节点（纯选中，不改变展开状态） */
   selectNode: (nodeId: string) => void;
+  /** 选中指定节点并展开其严格祖先链（不含自身），确保目标在树中可见 */
+  selectAndReveal: (nodeId: string) => void;
   /** 切换节点可见性 */
   toggleNodeVisibility: (nodeId: string) => void;
   /** 切换节点展开/折叠状态（纯本地操作，不涉及通信） */
@@ -263,7 +285,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
             set({ selectedNode: null });
             sendToTab({ action: PANEL_ACTION.CLEAR_HIGHLIGHT, type: HIGHLIGHT_TYPE.SELECTED }, () => { });
           } else {
-            get().selectNode(message.nodeId);
+            get().selectAndReveal(message.nodeId);
           }
         }
       });
@@ -289,10 +311,11 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   },
 
   /**
-   * 选中或取消选中节点。
+   * 选中或取消选中节点（纯选中，不改变展开状态）。
    *
    * 若该节点已选中则取消选中并清除高亮；否则发送 `SELECT_NODE` 请求，
-   * 成功后更新 `selectedNode` 并自动展开其所有祖先节点。
+   * 成功后更新 `selectedNode` 并压入选择历史栈。不展开任何祖先节点，
+   * 适用于键盘导航、行点击等用户主动在树内移动选中的场景。
    */
   selectNode: (nodeId: string) => {
     const { selectedNode } = get();
@@ -308,20 +331,12 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
     }, (response) => {
       if (response && response.node) {
         set(state => {
-          const expandedNodes = new Set(state.expandedNodes);
-          const parts = nodeId.split('_');
-          for (let i = 1; i < parts.length; i++) {
-            const ancestorId = parts.slice(0, i + 1).join('_');
-            expandedNodes.add(ancestorId);
-          }
-          expandedNodes.add('root');
           // 截断历史栈指针之后的记录，压入新选中的节点 ID
           const newHistory = state.selectionHistory.slice(0, state.historyIndex + 1);
           newHistory.push(nodeId);
           const newIndex = newHistory.length - 1;
           return {
             selectedNode: response.node,
-            expandedNodes,
             selectionHistory: newHistory,
             historyIndex: newIndex,
             canGoBack: newIndex > 0,
@@ -330,6 +345,26 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
         });
       }
     });
+  },
+
+  /**
+   * 选中指定节点并展开其严格祖先链（不含自身），确保目标在场景树中可见。
+   *
+   * 用于外部跳转场景（拾取器在画布点击图元等）：目标节点可能位于当前折叠的
+   * 分支深处，需要展开祖先才能看到。与 `selectNode` 的区别仅在于多了一步本地
+   * 展开，选中与历史栈逻辑完全复用 `selectNode`。仅在切换到新节点时展开，
+   * 避免重复选中触发取消选中时产生展开副作用。
+   */
+  selectAndReveal: (nodeId: string) => {
+    const { selectedNode } = get();
+    if (selectedNode?.id !== nodeId) {
+      set(state => {
+        const expandedNodes = new Set(state.expandedNodes);
+        expandAncestorChain(expandedNodes, nodeId, false);
+        return { expandedNodes };
+      });
+    }
+    get().selectNode(nodeId);
   },
 
   /** 切换节点可见性，成功后用返回的场景树更新本地状态。 */
@@ -473,12 +508,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
           const nameMatch = node.name.toLowerCase().includes(lowerQuery);
           const typeMatch = node.type.toLowerCase().includes(lowerQuery);
           if (nameMatch || typeMatch) {
-            expandedNodes.add(node.id);
-            const parts = node.id.split('_');
-            for (let i = 1; i < parts.length; i++) {
-              expandedNodes.add(parts.slice(0, i + 1).join('_'));
-            }
-            expandedNodes.add('root');
+            expandAncestorChain(expandedNodes, node.id, true);
           }
           node.children.forEach(collectMatchIds);
         };
@@ -525,12 +555,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
       if (response && response.node) {
         set(state => {
           const expandedNodes = new Set(state.expandedNodes);
-          const parts = nodeId.split('_');
-          for (let i = 1; i < parts.length; i++) {
-            const ancestorId = parts.slice(0, i + 1).join('_');
-            expandedNodes.add(ancestorId);
-          }
-          expandedNodes.add('root');
+          expandAncestorChain(expandedNodes, nodeId, false);
           return { selectedNode: response.node, expandedNodes };
           // 不更新 selectionHistory / historyIndex
         });
