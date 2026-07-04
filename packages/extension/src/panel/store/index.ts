@@ -125,6 +125,8 @@ interface PaperStore {
   explodeGroupId: string | null;
   /** 当前爆炸程度 ∈ [0, 1] */
   explodeFactor: number;
+  /** 当前聚焦的节点 ID（null 表示未聚焦） */
+  focusedNodeId: string | null;
 
   /** 初始化连接：检测 Paper.js 并注册消息监听 */
   initialize: () => void;
@@ -178,6 +180,10 @@ interface PaperStore {
   disableExplodeMode: () => void;
   /** 重置爆炸程度为 0（子图元归位，手柄保留） */
   resetExplode: () => void;
+  /** 聚焦指定节点（隐藏其各层祖先兄弟，孤立显示子树） */
+  focusNode: (nodeId: string) => void;
+  /** 退出聚焦（按聚焦前快照恢复可见性） */
+  exitFocus: () => void;
 }
 
 /** 内部导航方法类型（不在 PaperStore interface 中公开声明） */
@@ -225,6 +231,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   canGoForward: false,
   explodeGroupId: null,
   explodeFactor: 0,
+  focusedNodeId: null,
 
   /**
    * 初始化连接。
@@ -283,7 +290,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
 
           // Scope 被移除或激活切换时，清空选中节点并刷新场景树
           if (message.type === 'removed' || message.type === 'activated') {
-            set({ selectedNode: null });
+            set({ selectedNode: null, focusedNodeId: null });
             get().clearSelectionHistory();
             get().refreshSceneTree();
           }
@@ -744,5 +751,33 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   resetExplode: () => {
     sendToTab({ action: PANEL_ACTION.RESET_EXPLODE }, () => { });
     set({ explodeFactor: 0 });
+  },
+
+  /**
+   * 聚焦指定节点。
+   *
+   * 发送 `FOCUS_NODE` 到页面，由 Injected Script 采集可见性快照并隐藏目标节点
+   * 各层祖先的兄弟分支。成功后用返回的场景树更新本地状态并记录 focusedNodeId。
+   */
+  focusNode: (nodeId: string) => {
+    sendToTab({ action: PANEL_ACTION.FOCUS_NODE, nodeId }, (response) => {
+      if (response && response.sceneTree) {
+        set({ sceneTree: response.sceneTree, focusedNodeId: nodeId });
+      }
+    });
+  },
+
+  /**
+   * 退出聚焦。
+   *
+   * 发送 `EXIT_FOCUS` 让 Injected Script 按快照恢复可见性，
+   * 成功后更新场景树并将 focusedNodeId 置空。
+   */
+  exitFocus: () => {
+    sendToTab({ action: PANEL_ACTION.EXIT_FOCUS }, (response) => {
+      if (response && response.sceneTree) {
+        set({ sceneTree: response.sceneTree, focusedNodeId: null });
+      }
+    });
   },
 }));

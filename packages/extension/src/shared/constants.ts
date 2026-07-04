@@ -51,6 +51,10 @@ export const PANEL_ACTION = {
   DISABLE_EXPLODE_MODE: 'DISABLE_EXPLODE_MODE',
   /** 重置爆炸程度为 0（子图元归位，手柄保留） */
   RESET_EXPLODE: 'RESET_EXPLODE',
+  /** 聚焦指定节点（隐藏其各层祖先兄弟，孤立显示子树） */
+  FOCUS_NODE: 'FOCUS_NODE',
+  /** 退出聚焦（按聚焦前快照恢复可见性） */
+  EXIT_FOCUS: 'EXIT_FOCUS',
   /** DevTools 关闭时清理资源 */
   DEVTOOLS_CLEANUP: 'DEVTOOLS_CLEANUP',
 } as const;

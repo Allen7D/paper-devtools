@@ -1,5 +1,6 @@
 import { extractItemProperties, extractProjectProperties } from "./extra";
 import { computeExplodePositions, dragToFactor, type Point } from "./explodeMath";
+import { collectVisibilitySnapshot, restoreVisibility, applyFocusPath } from "./focusTree";
 import { ScopeProjectNode, ScopeTreeNode } from "types";
 import {
   HIGHLIGHT_TYPE,
@@ -174,6 +175,12 @@ let canvasClickHandlers = new WeakMap<HTMLCanvasElement, (e: MouseEvent) => void
 let pickerMouseMoveHandler: ((e: MouseEvent) => void) | null = null;
 /** 拾取器模式的 click 事件处理器 */
 let pickerClickHandler: ((e: MouseEvent) => void) | null = null;
+
+// ===== 聚焦模式状态 =====
+/** 聚焦前所有图元的可见性快照（nodeId -> visible），null 表示未聚焦 */
+let focusSnapshot: Map<string, boolean> | null = null;
+/** 当前聚焦的节点 ID，null 表示未聚焦 */
+let focusedNodeId: string | null = null;
 
 // ===== 爆炸预览模式状态 =====
 /** 当前处于爆炸模式的 Group 节点 ID */
@@ -920,10 +927,67 @@ window.addEventListener('scroll', () => {
  */
 window.addEventListener(INJECT_EVENT.PAPER_SCOPE_CHANGE, () => {
   clearAllOverlays();
+  focusSnapshot = null;
+  focusedNodeId = null;
   if (autoSwitchScope) {
     setupCanvasClickListeners();
   }
 });
+
+/**
+ * 进入/切换聚焦指定节点。
+ *
+ * - 首次聚焦：采集所有图元的可见性快照；
+ * - 切换聚焦目标：先按快照恢复到聚焦前状态；
+ * - 然后解析 nodeId 路径，从 project.layers 起逐层将路径索引对应的子图元设为可见、
+ *   其余兄弟设为隐藏，直到抵达目标节点（目标节点自身设为可见，其后代不触碰）。
+ * - `nodeId === 'root'` 时不隐藏任何节点（仅采集快照进入聚焦态）。
+ *
+ * @param nodeId - 目标节点 ID
+ * @returns `{ success, sceneTree? }`，失败时含 `reason`
+ */
+function focusNode(nodeId: string): { success: boolean; sceneTree?: any; reason?: string } {
+  const project = getActiveProject();
+  if (!project) return { success: false, reason: '无激活 Project' };
+
+  // 切换聚焦目标时先按快照恢复；首次聚焦则采集快照
+  if (focusSnapshot) {
+    restoreVisibility(project, focusSnapshot);
+  } else {
+    focusSnapshot = collectVisibilitySnapshot(project);
+  }
+
+  if (!applyFocusPath(project, nodeId)) {
+    return { success: false, reason: '节点路径无效' };
+  }
+
+  const view = getActiveView();
+  if (view) view.update();
+  focusedNodeId = nodeId;
+  const sceneTree = buildScopeProject(project);
+  return { success: true, sceneTree };
+}
+
+/**
+ * 退出聚焦：按聚焦前快照逐图元恢复可见性，清空快照与 focusedNodeId。
+ *
+ * @returns `{ success, sceneTree? }`
+ */
+function exitFocus(): { success: boolean; sceneTree?: any } {
+  const project = getActiveProject();
+  if (!project || !focusSnapshot) {
+    focusSnapshot = null;
+    focusedNodeId = null;
+    return { success: false };
+  }
+  restoreVisibility(project, focusSnapshot);
+  const view = getActiveView();
+  if (view) view.update();
+  focusSnapshot = null;
+  focusedNodeId = null;
+  const sceneTree = buildScopeProject(project);
+  return { success: true, sceneTree };
+}
 
 /**
  * DevTools 面板消息处理入口。
@@ -1091,6 +1155,8 @@ window.addEventListener(INJECT_EVENT.PAPER_DEVTOOLS_MESSAGE, function (event) {
       disablePicker();
       disableExplodeMode();
       clearAllOverlays();
+      focusSnapshot = null;
+      focusedNodeId = null;
       (window as any).$paper = undefined;
       response = { success: true };
       break;
@@ -1111,6 +1177,14 @@ window.addEventListener(INJECT_EVENT.PAPER_DEVTOOLS_MESSAGE, function (event) {
       break;
     case PANEL_ACTION.RESET_EXPLODE:
       response = resetExplode();
+      break;
+    case PANEL_ACTION.FOCUS_NODE:
+      if (message.nodeId) {
+        response = focusNode(message.nodeId);
+      }
+      break;
+    case PANEL_ACTION.EXIT_FOCUS:
+      response = exitFocus();
       break;
   }
   if (response) {

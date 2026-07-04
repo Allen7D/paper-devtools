@@ -105,6 +105,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case PANEL_ACTION.ENABLE_EXPLODE_MODE:
     case PANEL_ACTION.DISABLE_EXPLODE_MODE:
     case PANEL_ACTION.RESET_EXPLODE:
+    case PANEL_ACTION.FOCUS_NODE:
+    case PANEL_ACTION.EXIT_FOCUS:
     case PANEL_ACTION.DEVTOOLS_CLEANUP:
       sendToInjectScript(message, sendResponse);
       return true;

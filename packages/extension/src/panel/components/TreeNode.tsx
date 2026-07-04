@@ -45,6 +45,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
     disableExplodeMode,
     expandAllDescendants,
     collapseAllDescendants,
+    focusedNodeId,
+    focusNode,
+    exitFocus,
   } = usePaperStore();
 
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -68,6 +71,15 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
       disabled: !hasChildren,
       onClick: () => collapseAllDescendants(node.id),
     },
+    { type: 'divider' },
+    {
+      key: 'focus',
+      label: '聚焦',
+      onClick: () => focusNode(node.id),
+    },
+    ...(focusedNodeId !== null
+      ? [{ key: 'exitFocus', label: '退出聚焦', onClick: () => exitFocus() }]
+      : []),
   ];
 
   useEffect(() => {
