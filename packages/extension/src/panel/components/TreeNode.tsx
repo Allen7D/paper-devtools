@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { EyeOutlined, EyeInvisibleOutlined, CaretRightOutlined, UngroupOutlined } from '@ant-design/icons';
+import { Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
 import { usePaperStore, PaperNode } from '../store';
 
 import './TreeNode.less';
@@ -41,6 +43,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
     explodeGroupId,
     enableExplodeMode,
     disableExplodeMode,
+    expandAllDescendants,
+    collapseAllDescendants,
   } = usePaperStore();
 
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -49,6 +53,22 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
   const isSelected = selectedNode?.id === node.id;
   const isHovered = hoveredNode?.id === node.id;
   const isExplodeActive = explodeGroupId === node.id;
+  const hasChildren = node.children.length > 0;
+
+  const contextMenuItems: MenuProps['items'] = [
+    {
+      key: 'expandAll',
+      label: '递归展开',
+      disabled: !hasChildren,
+      onClick: () => expandAllDescendants(node.id),
+    },
+    {
+      key: 'collapseAll',
+      label: '递归折叠',
+      disabled: !hasChildren,
+      onClick: () => collapseAllDescendants(node.id),
+    },
+  ];
 
   useEffect(() => {
     if (isSelected && nodeRef.current) {
@@ -103,62 +123,67 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
   };
 
   return (
-    <div className="tree-node-container">
+    <Dropdown menu={{ items: contextMenuItems }} trigger={['contextMenu']}>
       <div
-        ref={nodeRef}
-        className={`tree-node ${isSelected ? 'selected' : ''} ${isHovered ? 'hovered' : ''}`}
-        style={{ '--indent': `${level * 16}px` } as React.CSSProperties}
-        onClick={handleSelect}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        className="tree-node-container"
+        onContextMenu={(e) => e.stopPropagation()}
       >
-        {node.children.length > 0 ? (
-          <span
-            className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
-            onClick={handleToggleExpand}
-          >
-            <CaretRightOutlined />
-          </span>
-        ) : (
-          <span className="expand-icon" style={{ visibility: 'hidden' }}>
-            <CaretRightOutlined />
-          </span>
-        )}
-
-        <span
-          className={`visibility-icon ${node.visible ? 'visible' : 'hidden'}`}
-          onClick={handleToggleVisibility}
-          title={node.visible ? '点击隐藏' : '点击显示'}
+        <div
+          ref={nodeRef}
+          className={`tree-node ${isSelected ? 'selected' : ''} ${isHovered ? 'hovered' : ''}`}
+          style={{ '--indent': `${level * 16}px` } as React.CSSProperties}
+          onClick={handleSelect}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          {node.visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-        </span>
+          {node.children.length > 0 ? (
+            <span
+              className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
+              onClick={handleToggleExpand}
+            >
+              <CaretRightOutlined />
+            </span>
+          ) : (
+            <span className="expand-icon" style={{ visibility: 'hidden' }}>
+              <CaretRightOutlined />
+            </span>
+          )}
 
-        <span className={`node-type ${getTypeClassName(node.type)}`}>
-          <HighlightText text={node.type} query={searchQuery} />
-        </span>
-
-        <span className={`node-name ${!node.name ? 'empty' : ''}`}>
-          {node.name ? <HighlightText text={node.name} query={searchQuery} /> : ''}
-        </span>
-
-        {node.type === 'Group' && (
           <span
-            className={`explode-icon ${isExplodeActive ? 'active' : ''}`}
-            onClick={handleToggleExplode}
-            title={isExplodeActive ? '退出组合爆炸' : '启用组合爆炸'}
+            className={`visibility-icon ${node.visible ? 'visible' : 'hidden'}`}
+            onClick={handleToggleVisibility}
+            title={node.visible ? '点击隐藏' : '点击显示'}
           >
-            <UngroupOutlined />
+            {node.visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
           </span>
+
+          <span className={`node-type ${getTypeClassName(node.type)}`}>
+            <HighlightText text={node.type} query={searchQuery} />
+          </span>
+
+          <span className={`node-name ${!node.name ? 'empty' : ''}`}>
+            {node.name ? <HighlightText text={node.name} query={searchQuery} /> : ''}
+          </span>
+
+          {node.type === 'Group' && (
+            <span
+              className={`explode-icon ${isExplodeActive ? 'active' : ''}`}
+              onClick={handleToggleExplode}
+              title={isExplodeActive ? '退出组合爆炸' : '启用组合爆炸'}
+            >
+              <UngroupOutlined />
+            </span>
+          )}
+        </div>
+
+        {isExpanded && node.children.length > 0 && (
+          <div className="tree-node-children">
+            {node.children.map((child) => (
+              <TreeNode key={child.id} node={child} level={level + 1} searchQuery={searchQuery} />
+            ))}
+          </div>
         )}
       </div>
-
-      {isExpanded && node.children.length > 0 && (
-        <div className="tree-node-children">
-          {node.children.map((child) => (
-            <TreeNode key={child.id} node={child} level={level + 1} searchQuery={searchQuery} />
-          ))}
-        </div>
-      )}
-    </div>
+    </Dropdown>
   );
 };

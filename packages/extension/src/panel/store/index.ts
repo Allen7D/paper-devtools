@@ -22,6 +22,22 @@ function expandAncestorChain(
 }
 
 /**
+ * 在场景树中深度优先查找指定 ID 的节点。
+ *
+ * @param node - 子树根节点
+ * @param id - 目标节点 ID
+ * @returns 匹配的节点，未找到返回 `null`
+ */
+function findNodeInTree(node: PaperNode, id: string): PaperNode | null {
+  if (node.id === id) return node;
+  for (const child of node.children) {
+    const found = findNodeInTree(child, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/**
  * 场景树节点。
  *
  * 对应 Paper.js 中 `Item` / `Layer` / `Group` / `Project` 等对象在 DevTools 中的镜像表示，
@@ -122,6 +138,10 @@ interface PaperStore {
   toggleNodeVisibility: (nodeId: string) => void;
   /** 切换节点展开/折叠状态（纯本地操作，不涉及通信） */
   toggleNodeExpanded: (nodeId: string) => void;
+  /** 展开指定节点下的所有子孙节点（含自身） */
+  expandAllDescendants: (nodeId: string) => void;
+  /** 收起指定节点下的所有子孙节点（含自身） */
+  collapseAllDescendants: (nodeId: string) => void;
   /** 更新节点属性并刷新场景树 */
   updateNodeProperty: (nodeId: string, property: string, value: any) => void;
   /** 获取所有可用 Scope 列表 */
@@ -415,6 +435,52 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
       } else {
         expandedNodes.add(nodeId);
       }
+      return { expandedNodes };
+    });
+  },
+
+  /**
+   * 展开指定节点下的所有子孙节点（含自身）。
+   *
+   * 遍历以该节点为根的整棵子树，将所有拥有子节点的后代 ID 加入 `expandedNodes`，
+   * 使整棵子树在场景树中完全可见。纯本地操作。
+   */
+  expandAllDescendants: (nodeId: string) => {
+    const { sceneTree } = get();
+    if (!sceneTree) return;
+    const node = findNodeInTree(sceneTree, nodeId);
+    if (!node) return;
+    set(state => {
+      const expandedNodes = new Set(state.expandedNodes);
+      const walk = (n: PaperNode) => {
+        if (n.children.length > 0) {
+          expandedNodes.add(n.id);
+          n.children.forEach(walk);
+        }
+      };
+      walk(node);
+      return { expandedNodes };
+    });
+  },
+
+  /**
+   * 收起指定节点下的所有子孙节点（含自身）。
+   *
+   * 遍历以该节点为根的整棵子树，将所有后代 ID 从 `expandedNodes` 移除，
+   * 使整棵子树完全折叠。纯本地操作。
+   */
+  collapseAllDescendants: (nodeId: string) => {
+    const { sceneTree } = get();
+    if (!sceneTree) return;
+    const node = findNodeInTree(sceneTree, nodeId);
+    if (!node) return;
+    set(state => {
+      const expandedNodes = new Set(state.expandedNodes);
+      const walk = (n: PaperNode) => {
+        expandedNodes.delete(n.id);
+        n.children.forEach(walk);
+      };
+      walk(node);
       return { expandedNodes };
     });
   },
