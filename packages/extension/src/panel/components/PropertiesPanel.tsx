@@ -114,10 +114,12 @@ const DragNumberInput: React.FC<{
   precision?: number;
   step?: number;
   label?: string;
-}> = ({ value, onChange, precision = 2, step = 1, label }) => {
+  /** 拖拽方向：'x' 水平拖拽（默认），'y' 垂直拖拽 */
+  axis?: 'x' | 'y';
+}> = ({ value, onChange, precision = 2, step = 1, label, axis = 'x' }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
-  const dragRef = useRef<{ startX: number; startValue: number; moved: boolean; pointerId: number } | null>(null);
+  const dragRef = useRef<{ startX: number; startY: number; startValue: number; moved: boolean; pointerId: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const round = (v: number) => {
@@ -131,6 +133,7 @@ const DragNumberInput: React.FC<{
     e.stopPropagation();
     dragRef.current = {
       startX: e.clientX,
+      startY: e.clientY,
       startValue: value,
       moved: false,
       pointerId: e.pointerId,
@@ -140,13 +143,16 @@ const DragNumberInput: React.FC<{
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current) return;
-    const dx = e.clientX - dragRef.current.startX;
-    if (!dragRef.current.moved && Math.abs(dx) > 2) {
+    // 根据轴向计算拖拽距离（垂直方向向上拖拽增大数值）
+    const delta = axis === 'y'
+      ? dragRef.current.startY - e.clientY
+      : e.clientX - dragRef.current.startX;
+    if (!dragRef.current.moved && Math.abs(delta) > 2) {
       dragRef.current.moved = true;
     }
     if (dragRef.current.moved) {
       const speed = e.shiftKey ? 10 : e.ctrlKey ? 0.1 : 1;
-      onChange(round(dragRef.current.startValue + dx * step * speed));
+      onChange(round(dragRef.current.startValue + delta * step * speed));
     }
   };
 
@@ -192,15 +198,15 @@ const DragNumberInput: React.FC<{
 
   return (
     <div
-      className="drag-number-input"
-      title="拖拽调整数值 · 点击输入 · Shift加速 · Ctrl减速"
+      className={`drag-number-input${axis === 'y' ? ' axis-y' : ''}`}
+      title={`${axis === 'y' ? '上下' : '左右'}拖拽调整数值 · 点击输入 · Shift加速 · Ctrl减速`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
       {label && <span className="drag-number-label">{label}</span>}
       <span className="drag-number-value">{String(round(value))}</span>
-      <span className="drag-number-handle">⇄</span>
+      <span className="drag-number-handle">{axis === 'y' ? '⇅' : '⇄'}</span>
     </div>
   );
 };
@@ -216,6 +222,7 @@ const PointEditor: React.FC<{ value: any; onChange: (value: any) => void }> = ({
       />
       <DragNumberInput
         label="Y"
+        axis="y"
         value={value.y}
         onChange={(y) => onChange({ ...value, y })}
       />
@@ -276,6 +283,7 @@ const RectangleEditor: React.FC<{ value: any; onChange: (value: any) => void }> 
       />
       <DragNumberInput
         label="Y"
+        axis="y"
         value={value.y}
         onChange={(y) => onChange({ ...value, y })}
       />
@@ -286,6 +294,7 @@ const RectangleEditor: React.FC<{ value: any; onChange: (value: any) => void }> 
       />
       <DragNumberInput
         label="H"
+        axis="y"
         value={value.height}
         onChange={(height) => onChange({ ...value, height })}
       />
