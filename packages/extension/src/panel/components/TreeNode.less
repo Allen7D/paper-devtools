@@ -69,17 +69,39 @@
       align-items: center;
       justify-content: center;
       transition: color 0.2s ease;
-      
+
       &:hover {
         color: #333;
       }
-      
+
       &.visible {
         color: #52c41a;
       }
-      
+
       &.hidden {
         color: #ff4d4f;
+      }
+    }
+
+    .explode-icon {
+      margin-right: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ccc;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #fa8c16;
+      }
+
+      // 激活状态高亮
+      &.active {
+        color: #fa8c16;
       }
     }
     

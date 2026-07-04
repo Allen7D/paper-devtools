@@ -482,7 +482,7 @@ const PropertyEditor: React.FC<{
 
 // 主属性面板组件
 export const PropertiesPanel: React.FC = () => {
-  const { selectedNode, sceneTree, goBack, goForward, canGoBack, canGoForward, selectNode } = usePaperStore();
+  const { selectedNode, sceneTree, goBack, goForward, canGoBack, canGoForward, selectNode, explodeGroupId, explodeFactor, resetExplode } = usePaperStore();
 
   if (!selectedNode) {
     return (
@@ -552,6 +552,23 @@ export const PropertiesPanel: React.FC = () => {
                 {selectedNode.visible ? '显示' : '隐藏'}
               </Text>
             </Descriptions.Item>
+            {explodeGroupId === selectedNode.id && (
+              <Descriptions.Item
+                label={
+                  <Space size={2}>
+                    爆炸程度
+                    <Tooltip title="拖拽 Group 中心手柄控制爆炸程度，临时预览不改数据。切换节点或点树上闪电图标退出。">
+                      <QuestionCircleOutlined style={{ fontSize: '11px', color: '#999', cursor: 'help' }} />
+                    </Tooltip>
+                  </Space>
+                }
+              >
+                <Space size={4}>
+                  <Text>{Math.round(explodeFactor * 100)}%</Text>
+                  <Button size="small" type="link" style={{ padding: 0, height: 'auto', fontSize: '12px' }} onClick={resetExplode}>重置</Button>
+                </Space>
+              </Descriptions.Item>
+            )}
           </Descriptions>
         </Card>
 

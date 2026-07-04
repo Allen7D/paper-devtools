@@ -45,6 +45,12 @@ export const PANEL_ACTION = {
   SET_AUTO_SWITCH_SCOPE: 'SET_AUTO_SWITCH_SCOPE',
   /** 获取自动切换 Scope 的启用状态 */
   GET_AUTO_SWITCH_SCOPE: 'GET_AUTO_SWITCH_SCOPE',
+  /** 进入 Group 爆炸预览模式（记录子图元原始位置并显示拖拽手柄） */
+  ENABLE_EXPLODE_MODE: 'ENABLE_EXPLODE_MODE',
+  /** 退出 Group 爆炸预览模式（恢复子图元位置并移除手柄） */
+  DISABLE_EXPLODE_MODE: 'DISABLE_EXPLODE_MODE',
+  /** 重置爆炸程度为 0（子图元归位，手柄保留） */
+  RESET_EXPLODE: 'RESET_EXPLODE',
   /** DevTools 关闭时清理资源 */
   DEVTOOLS_CLEANUP: 'DEVTOOLS_CLEANUP',
 } as const;
@@ -67,6 +73,8 @@ export const INJECT_EVENT = {
   PAPER_SCOPE_CHANGE: 'PAPER_SCOPE_CHANGE',
   /** 拾取器选中结果（Inject → Content） */
   PAPER_PICKER_RESULT: 'PAPER_PICKER_RESULT',
+  /** 爆炸程度变化（Inject → Content，拖拽松手后回传最终 factor） */
+  PAPER_EXPLODE_FACTOR: 'PAPER_EXPLODE_FACTOR',
 } as const;
 
 /**
@@ -81,6 +89,8 @@ export const RUNTIME_ACTION = {
   SCENE_CHANGE: 'SCENE_CHANGE',
   /** 拾取器选中结果通知 */
   PICKER_RESULT: 'PICKER_RESULT',
+  /** 爆炸程度变化通知 */
+  EXPLODE_FACTOR: 'EXPLODE_FACTOR',
 } as const;
 
 /**

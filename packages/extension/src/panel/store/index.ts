@@ -105,6 +105,10 @@ interface PaperStore {
   canGoBack: boolean;
   /** 派生状态：是否可前进（指针不在末尾） */
   canGoForward: boolean;
+  /** 当前处于爆炸预览模式的 Group 节点 ID（null 表示未启用） */
+  explodeGroupId: string | null;
+  /** 当前爆炸程度 ∈ [0, 1] */
+  explodeFactor: number;
 
   /** 初始化连接：检测 Paper.js 并注册消息监听 */
   initialize: () => void;
@@ -148,6 +152,12 @@ interface PaperStore {
   goForward: () => void;
   /** 清空选择历史栈并重置指针 */
   clearSelectionHistory: () => void;
+  /** 进入指定 Group 的爆炸预览模式（记录子图元原始位置并显示拖拽手柄） */
+  enableExplodeMode: (nodeId: string) => void;
+  /** 退出爆炸预览模式（恢复子图元位置并移除手柄） */
+  disableExplodeMode: () => void;
+  /** 重置爆炸程度为 0（子图元归位，手柄保留） */
+  resetExplode: () => void;
 }
 
 /** 内部导航方法类型（不在 PaperStore interface 中公开声明） */
@@ -192,6 +202,8 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   historyIndex: -1,
   canGoBack: false,
   canGoForward: false,
+  explodeGroupId: null,
+  explodeFactor: 0,
 
   /**
    * 初始化连接。
@@ -288,6 +300,11 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
             get().selectAndReveal(message.nodeId);
           }
         }
+
+        // 爆炸程度变化：更新本地 factor 显示
+        if (message.action === RUNTIME_ACTION.EXPLODE_FACTOR) {
+          set({ explodeFactor: message.factor ?? 0 });
+        }
       });
     }
   },
@@ -343,6 +360,11 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
             canGoForward: false, // 刚压栈，指针在末尾
           };
         });
+        // 切换选中节点时，若爆炸模式绑定的是其他 Group，自动退出
+        const { explodeGroupId } = get();
+        if (explodeGroupId && explodeGroupId !== nodeId) {
+          get().disableExplodeMode();
+        }
       }
     });
   },
@@ -600,5 +622,60 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   /** 清空选择历史栈并重置指针为初始状态。 */
   clearSelectionHistory: () => {
     set({ selectionHistory: [], historyIndex: -1, canGoBack: false, canGoForward: false });
+  },
+
+  /**
+   * 进入指定 Group 的爆炸预览模式。
+   *
+   * 发送 `ENABLE_EXPLODE_MODE` 到页面，由 Injected Script 记录子图元原始位置
+   * 并创建拖拽手柄。成功后本地标记 `explodeGroupId` 并重置 `explodeFactor`。
+   */
+  enableExplodeMode: (nodeId: string) => {
+    let done = false;
+    const timer = setTimeout(() => {
+      if (!done) {
+        done = true;
+        console.error(
+          '[Paper DevTools] 启用爆炸模式超时（3s 无响应）。\n' +
+          '请重载扩展（chrome://extensions 点刷新按钮）并刷新被调试页面后重试。'
+        );
+      }
+    }, 3000);
+    sendToTab({
+      action: PANEL_ACTION.ENABLE_EXPLODE_MODE,
+      nodeId
+    }, (response) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (response && response.success) {
+        set({ explodeGroupId: nodeId, explodeFactor: 0 });
+      } else {
+        console.warn('[Paper DevTools] 启用爆炸模式失败:',
+          response ? response.reason : 'Inject 脚本未响应，请刷新页面后重试');
+      }
+    });
+  },
+
+  /**
+   * 退出爆炸预览模式。
+   *
+   * 发送 `DISABLE_EXPLODE_MODE` 让 Injected Script 恢复子图元位置并移除手柄，
+   * 本地清空爆炸状态。
+   */
+  disableExplodeMode: () => {
+    sendToTab({ action: PANEL_ACTION.DISABLE_EXPLODE_MODE }, () => { });
+    set({ explodeGroupId: null, explodeFactor: 0 });
+  },
+
+  /**
+   * 重置爆炸程度为 0。
+   *
+   * 发送 `RESET_EXPLODE` 让 Injected Script 恢复子图元位置（手柄保留），
+   * 本地同步 `explodeFactor` 为 0。
+   */
+  resetExplode: () => {
+    sendToTab({ action: PANEL_ACTION.RESET_EXPLODE }, () => { });
+    set({ explodeFactor: 0 });
   },
 }));

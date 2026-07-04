@@ -102,6 +102,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case PANEL_ACTION.DISABLE_PICKER:
     case PANEL_ACTION.SET_AUTO_SWITCH_SCOPE:
     case PANEL_ACTION.GET_AUTO_SWITCH_SCOPE:
+    case PANEL_ACTION.ENABLE_EXPLODE_MODE:
+    case PANEL_ACTION.DISABLE_EXPLODE_MODE:
+    case PANEL_ACTION.RESET_EXPLODE:
     case PANEL_ACTION.DEVTOOLS_CLEANUP:
       sendToInjectScript(message, sendResponse);
       return true;
@@ -145,6 +148,21 @@ window.addEventListener(INJECT_EVENT.PAPER_PICKER_RESULT, ((event: CustomEvent) 
       action: RUNTIME_ACTION.PICKER_RESULT,
       nodeId: detail.nodeId,
       deselect: detail.deselect || false,
+    });
+  } catch {
+    // Panel may not be open
+  }
+}) as EventListener);
+
+window.addEventListener(INJECT_EVENT.PAPER_EXPLODE_FACTOR, ((event: CustomEvent) => {
+  const detail = event.detail;
+  if (!detail) return;
+
+  try {
+    chrome.runtime.sendMessage({
+      action: RUNTIME_ACTION.EXPLODE_FACTOR,
+      groupId: detail.groupId,
+      factor: detail.factor,
     });
   } catch {
     // Panel may not be open

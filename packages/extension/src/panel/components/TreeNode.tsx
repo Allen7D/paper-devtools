@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { EyeOutlined, EyeInvisibleOutlined, CaretRightOutlined } from '@ant-design/icons';
+import { EyeOutlined, EyeInvisibleOutlined, CaretRightOutlined, UngroupOutlined } from '@ant-design/icons';
 import { usePaperStore, PaperNode } from '../store';
 
 import './TreeNode.less';
@@ -38,6 +38,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
     hoveredNode,
     hoverNode,
     clearHover,
+    explodeGroupId,
+    enableExplodeMode,
+    disableExplodeMode,
   } = usePaperStore();
 
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -45,6 +48,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
   const isExpanded = expandedNodes.has(node.id);
   const isSelected = selectedNode?.id === node.id;
   const isHovered = hoveredNode?.id === node.id;
+  const isExplodeActive = explodeGroupId === node.id;
 
   useEffect(() => {
     if (isSelected && nodeRef.current) {
@@ -83,6 +87,15 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
   const handleToggleVisibility = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleNodeVisibility(node.id);
+  };
+
+  const handleToggleExplode = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isExplodeActive) {
+      disableExplodeMode();
+    } else {
+      enableExplodeMode(node.id);
+    }
   };
 
   const getTypeClassName = (type: string) => {
@@ -127,6 +140,16 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
         <span className={`node-name ${!node.name ? 'empty' : ''}`}>
           {node.name ? <HighlightText text={node.name} query={searchQuery} /> : ''}
         </span>
+
+        {node.type === 'Group' && (
+          <span
+            className={`explode-icon ${isExplodeActive ? 'active' : ''}`}
+            onClick={handleToggleExplode}
+            title={isExplodeActive ? '退出组合爆炸' : '启用组合爆炸'}
+          >
+            <UngroupOutlined />
+          </span>
+        )}
       </div>
 
       {isExpanded && node.children.length > 0 && (
