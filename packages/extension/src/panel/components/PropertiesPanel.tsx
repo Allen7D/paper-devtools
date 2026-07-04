@@ -199,7 +199,7 @@ const DragNumberInput: React.FC<{
   return (
     <div
       className={`drag-number-input${axis === 'y' ? ' axis-y' : ''}`}
-      title={`${axis === 'y' ? '上下' : '左右'}拖拽调整数值 · 点击输入 · Shift加速 · Ctrl减速`}
+      title={`拖拽调整 · Shift加速 · Ctrl减速`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
