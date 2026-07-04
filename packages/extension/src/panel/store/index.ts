@@ -189,7 +189,8 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   sceneTree: null,
   selectedNode: null,
   hoveredNode: null,
-  expandedNodes: new Set<string>(),
+  // 默认展开 Project 根节点（仅 Project，其子层保持折叠）
+  expandedNodes: new Set<string>(['root']),
   availableScopes: [],
   activeScopeId: null,
   overlayEnabled: false,
