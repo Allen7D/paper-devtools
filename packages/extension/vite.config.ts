@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 import fs from 'node:fs';
 import zip from 'vite-plugin-zip-pack';
 import manifest from './manifest.config.js';
-import { name, version } from './package.json';
+import { name, version } from '../../package.json';
 
 export default defineConfig({
   resolve: {
@@ -24,7 +24,7 @@ export default defineConfig({
   plugins: [
     react(),
     crx({ manifest }),
-    zip({ outDir: 'release', outFileName: `crx-${name}-${version}.zip` }),
+    zip({ outDir: 'release', outFileName: `${name}-${version}.zip` }),
     {
       name: 'inject-manifest-plugin',
       enforce: 'post',
