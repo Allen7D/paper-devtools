@@ -1,6 +1,7 @@
 import { findPaperItemById, getActiveView } from "./sceneTreeBuilder";
 import { getOverlayContainer } from "./overlayManager";
 import { computeExplodePositions, dragToFactor, type Point } from "./explodeMath";
+import { isPickerActive, disablePicker, enablePicker } from "./pickerMode";
 import { INJECT_EVENT } from "@/shared/constants";
 
 // ===== 爆炸预览模式状态 =====
@@ -28,6 +29,8 @@ let explodeHandleAnchor: { x: number; y: number } = { x: 0, y: 0 };
 let explodeCenterOverlay: { x: number; y: number } = { x: 0, y: 0 };
 /** 手柄中心在 overlay 容器内的坐标（拖拽时更新） */
 let explodeHandlePos: { x: number; y: number } = { x: 0, y: 0 };
+/** 拖拽前拾取器是否激活（mouseup 时据此恢复） */
+let pickerWasActive = false;
 
 /**
  * 注入爆炸手柄的 CSS 样式（默认小尺寸，hover 放大）。
@@ -114,6 +117,13 @@ function onExplodeHandleMouseDown(e: MouseEvent) {
   e.stopPropagation();
   explodeDragStart = { x: e.clientX, y: e.clientY };
   explodeHandleAnchor = { ...explodeHandlePos };
+
+  // 暂时禁用拾取器，避免拖拽手柄时命中测试高亮造成视觉干扰
+  pickerWasActive = isPickerActive();
+  if (pickerWasActive) {
+    disablePicker();
+  }
+
   document.addEventListener('mousemove', onExplodeHandleMouseMove);
   document.addEventListener('mouseup', onExplodeHandleMouseUp);
 }
@@ -157,6 +167,12 @@ function onExplodeHandleMouseUp() {
   document.removeEventListener('mousemove', onExplodeHandleMouseMove);
   document.removeEventListener('mouseup', onExplodeHandleMouseUp);
   explodeDragStart = null;
+
+  // 恢复拾取器（仅当拖拽前它是激活的）
+  if (pickerWasActive) {
+    enablePicker();
+    pickerWasActive = false;
+  }
 }
 
 /**
@@ -279,5 +295,13 @@ export function disableExplodeMode(): { success: boolean } {
   explodeOrigins = [];
   explodeFactor = 0;
   explodeDragStart = null;
+
+  // 若拖拽中途退出，清理 document 监听并恢复拾取器
+  document.removeEventListener('mousemove', onExplodeHandleMouseMove);
+  document.removeEventListener('mouseup', onExplodeHandleMouseUp);
+  if (pickerWasActive) {
+    enablePicker();
+    pickerWasActive = false;
+  }
   return { success: true };
 }
