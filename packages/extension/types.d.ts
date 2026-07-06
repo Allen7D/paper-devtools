@@ -35,7 +35,7 @@ export interface ScopeTreeNode {
   id: string;
   name: string;
   type: string;
-  children: SceneTreeNode[];
+  children: ScopeTreeNode[];
   properties: Record<string, any>;
   visible: boolean;
   selected: boolean;
