@@ -192,7 +192,7 @@ inject/index.ts 轮询检测 (10次 × 1秒)
 
 | 项目 | 状态 |
 |------|------|
-| 测试架构 | ⚠️ 部分建立（inject 逻辑层+通信层 + panel store/utils 已覆盖，DOM 交互层/UI 未覆盖） |
+| 测试架构 | ⚠️ 部分建立（inject 全层 + panel store/utils 已覆盖，content/UI 未覆盖） |
 | Background Script | ⚠️ 空实现 |
 | Extension ESLint | ⚠️ 未配置（仅 example 项目有） |
 | 错误处理 | ⚠️ 基础级别，缺少统一错误处理机制 |
