@@ -151,6 +151,13 @@ inject/index.ts 轮询检测 (10次 × 1秒)
 
 每次代码修改完成后，必须运行 `npx vitest run` 确保所有测试通过；如果测试失败，必须修复问题直到测试全部通过。
 
+### 测试文件组织约定
+
+- 测试文件与源文件**命名一一对应**：源文件 `src/xxx/yyy.ts` → 测试文件 `src/xxx/__tests__/yyy.test.ts`。
+- 测试文件统一放源文件同目录的 `__tests__/` 子目录下，便于按文件名快速定位被测模块。
+- 禁止在源文件旁直接建 `.test.ts`（避免与 `__tests__/` 重复）。
+- 修改源文件后，同步检查对应 `__tests__/yyy.test.ts` 是否需要更新。
+
 ### 测试影响评估（改动后必做）
 
 每次改动后，按以下决策树判断是否需要新增/改进单元测试，并对照 `docs/PROJECT_KNOWLEDGE.md` 的"模块可测性地图"：
@@ -185,7 +192,7 @@ inject/index.ts 轮询检测 (10次 × 1秒)
 
 | 项目 | 状态 |
 |------|------|
-| 测试架构 | ⚠️ 部分建立（inject 纯逻辑 + panel store/utils 已覆盖，通信层/UI 未覆盖） |
+| 测试架构 | ⚠️ 部分建立（inject 逻辑层+通信层 + panel store/utils 已覆盖，DOM 交互层/UI 未覆盖） |
 | Background Script | ⚠️ 空实现 |
 | Extension ESLint | ⚠️ 未配置（仅 example 项目有） |
 | 错误处理 | ⚠️ 基础级别，缺少统一错误处理机制 |

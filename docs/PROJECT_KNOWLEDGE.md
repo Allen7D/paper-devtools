@@ -161,7 +161,7 @@ App (packages/extension/src/panel/App.tsx)
 | 覆盖层管理 | `inject/overlayManager.ts` | 中 | 无 | P2 | 高亮边框，需 mock Paper.js Item |
 | 拾取器模式 | `inject/pickerMode.ts` | 中 | 无 | P2 | Canvas 点击 + Scope 切换，需 mock |
 | 爆炸预览 | `inject/explodeMode.ts` | 中 | 无 | P2 | 拖拽手柄控制散开，需 mock |
-| 聚焦模式 | `inject/focusMode.ts` | 中 | 无 | P2 | 子树孤立显示，需 mock |
+| 聚焦模式 | `inject/focusMode.ts` | 中 | 已覆盖（8） | P2 | 快照生命周期 |
 | 检测 | `inject/index.ts` | 低 | 无 | P3 | 轮询+MutationObserver，集成测试 |
 | UI 组件 | `panel/components/*` | 中 | 无 | P3 | 需 @testing-library（未引入） |
 | Content Script | `content/index.ts` | 低 | 无 | P3 | chrome API 中继，集成测试 |
