@@ -9,16 +9,17 @@ import type { Bridge, RuntimeEvent } from './bridge';
  */
 export class ExtensionBridge implements Bridge {
   send(message: any, callback: (response: any, error?: string) => void): void {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tabId = tabs[0]?.id;
-      if (!tabId) {
-        callback(undefined, 'no active tab');
-        return;
-      }
-      chrome.tabs.sendMessage(tabId, message, (response) => {
-        const error = chrome.runtime.lastError?.message;
-        callback(response, error);
-      });
+    // DevTools Panel 运行在 DevTools 窗口上下文，chrome.tabs.query({ currentWindow: true })
+    // 查询的是 DevTools 窗口而非被调试页面，无法取到目标标签页。
+    // 使用 chrome.devtools.inspectedWindow.tabId 获取当前被检查的标签页 ID。
+    const tabId = chrome.devtools?.inspectedWindow?.tabId;
+    if (typeof tabId !== 'number') {
+      callback(undefined, 'no active tab');
+      return;
+    }
+    chrome.tabs.sendMessage(tabId, message, (response) => {
+      const error = chrome.runtime.lastError?.message;
+      callback(response, error);
     });
   }
 

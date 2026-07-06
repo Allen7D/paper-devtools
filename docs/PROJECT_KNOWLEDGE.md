@@ -122,7 +122,7 @@ Paper.js 中每个 `PaperScope` 对应一个独立的项目上下文（通常绑
 | Inject (属性提取) | `packages/extension/src/inject/extra.ts` | 属性提取函数 |
 | Inject (初始化) | `packages/extension/src/inject/setup.ts` | initInject()：__PAPER_SCOPES__ 初始化 + 轮询 + Observer（供 index.ts 和 devtool-local 复用） |
 | 通信桥接接口 | `packages/extension/src/shared/bridge.ts` | Bridge 接口 + setBridge/getBridge 依赖注入 |
-| 扩展桥接实现 | `packages/extension/src/shared/extensionBridge.ts` | ExtensionBridge：封装 chrome.tabs.sendMessage + onMessage |
+| 扩展桥接实现 | `packages/extension/src/shared/extensionBridge.ts` | ExtensionBridge：通过 `chrome.devtools.inspectedWindow.tabId` 取被检查标签页，封装 `chrome.tabs.sendMessage` + `onMessage`（不可用 `chrome.tabs.query({currentWindow:true})`，DevTools 窗口无活动标签页） |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
 | MV3 清单 | `packages/extension/manifest.config.ts` | CRXJS defineManifest |
 | Vite 配置 | `packages/extension/vite.config.ts` | 主构建配置 |
@@ -173,7 +173,7 @@ App (packages/extension/src/panel/App.tsx)
 | 聚焦模式 | `inject/focusMode.ts` | 中 | 已覆盖（8） | P2 | 快照生命周期 |
 | 检测 | `inject/index.ts` | 低 | 已覆盖（8） | P3 | mock window + __PAPER_SCOPES__ |
 | 注入入口 | `inject/parse.ts` | 低 | 已覆盖（2） | P3 | 监听器注册 + 路由器初始化 |
-| 通信桥接 | `shared/bridge.ts` + `extensionBridge.ts` | 高 | 间接覆盖 | P1 | Bridge 接口，store 测试间接验证 |
+| 通信桥接 | `shared/bridge.ts` + `extensionBridge.ts` | 高 | 已覆盖（4） | P1 | ExtensionBridge 直接单测（mock chrome.devtools/tabs/runtime）；Bridge 接口由 store 测试间接验证 |
 | UI 组件 | `panel/components/*` | 中 | 无 | P3 | 需 @testing-library（未引入） |
 | Content Script | `content/index.ts` | 低 | 无 | P3 | chrome API 中继，集成测试 |
 | Background | `background/index.ts` | 低 | 无 | P4 | 空实现 |
@@ -227,6 +227,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-06 | 修复 | ExtensionBridge 改用 `chrome.devtools.inspectedWindow.tabId` 取被检查标签页，修复 DevTools 面板 "no active tab" 导致无法连接的致命 bug（原 `chrome.tabs.query({currentWindow:true})` 在 DevTools 窗口上下文返回空） | shared | `shared/extensionBridge.ts`, `shared/__tests__/extensionBridge.test.ts` |
 | 2026-07-06 | 新增 | 接入 Playwright E2E 测试，覆盖 devtool-local 端到端交互（连接/场景树/选中/可见性/多Scope/属性） | e2e | `playwright.config.ts`, `e2e/local.spec.ts`, `package.json` |
 | 2026-07-06 | 增强 | devtool-local 支持多 Scope 创建/删除（复用 example 绘图函数，配套 @example alias） | devtool-local | `devtool-local/src/scene.ts`, `devtool-local/vite.config.ts`, `devtool-local/tsconfig.json` |
 | 2026-07-06 | 新增 | devtool-local 包：脱离 Chrome 扩展的本地运行版本（LocalBridge 同页面通信，复用 Panel UI + Inject 逻辑） | devtool-local, inject | `devtool-local/`, `inject/setup.ts`, `inject/index.ts` |
