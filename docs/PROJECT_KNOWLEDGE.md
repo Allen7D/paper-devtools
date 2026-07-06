@@ -59,12 +59,13 @@ paper-devtools/
 扩展沿用 Chrome MV3 扩展的经典三层模型，在不同执行环境间传递数据：
 
 ```
-DevTools Panel (React) ──chrome.tabs.sendMessage──▶ Content Script ──CustomEvent──▶ Injected Scripts ──直接访问──▶ Paper.js API
+DevTools Panel (React) ──Bridge──▶ Content Script ──CustomEvent──▶ Injected Scripts ──直接访问──▶ Paper.js API
 ```
 
-- **Panel → Content Script**：`chrome.tabs.sendMessage`，消息格式 `{ action, ...params }`
+- **Panel → Bridge → Content Script**：Panel Store 通过 `Bridge` 接口（`shared/bridge.ts`）发消息，扩展模式由 `ExtensionBridge` 封装 `chrome.tabs.sendMessage`，本地模式由 `LocalBridge` 同页面直接调用（见设计决策 4）。消息格式 `{ action, ...params }`
 - **Content Script → Injected Script**：`CustomEvent('PAPER_DEVTOOLS_MESSAGE')`，携带 `messageId` 用于异步响应匹配
 - **Injected Script → Content Script**：`CustomEvent('PAPER_DEVTOOLS_RESPONSE')`，携带相同 `messageId`
+- **Injected → Panel 运行时事件**：`chrome.runtime.sendMessage` → `Bridge.onEvent`（Scope 变化、场景树变化、拾取器结果等）
 
 ### 4.2 消息协议 (Action 列表)
 
@@ -116,6 +117,8 @@ Paper.js 中每个 `PaperScope` 对应一个独立的项目上下文（通常绑
 | Inject (聚焦) | `packages/extension/src/inject/focusMode.ts` | 聚焦模式（隐藏祖先兄弟，孤立显示子树） |
 | Inject (消息路由) | `packages/extension/src/inject/messageRouter.ts` | DevTools 消息分发（action → handler switch） |
 | Inject (属性提取) | `packages/extension/src/inject/extra.ts` | 属性提取函数 |
+| 通信桥接接口 | `packages/extension/src/shared/bridge.ts` | Bridge 接口 + setBridge/getBridge 依赖注入 |
+| 扩展桥接实现 | `packages/extension/src/shared/extensionBridge.ts` | ExtensionBridge：封装 chrome.tabs.sendMessage + onMessage |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
 | MV3 清单 | `packages/extension/manifest.config.ts` | CRXJS defineManifest |
 | Vite 配置 | `packages/extension/vite.config.ts` | 主构建配置 |
@@ -152,17 +155,19 @@ App (packages/extension/src/panel/App.tsx)
 | 模块 | 文件 | 可测性 | 当前覆盖 | 优先级 | 说明 |
 |------|------|--------|----------|--------|------|
 | 属性提取 | `inject/extra.ts` | 高 | 已覆盖（12） | P0 | 纯函数，提取 Item/Project 属性 |
-| 场景树构建 | `inject/sceneTreeBuilder.ts` | 高 | 无 | P0 | buildScopeTree/Project 未测 |
+| 场景树构建 | `inject/sceneTreeBuilder.ts` | 高 | 已覆盖（20） | P0 | buildScopeTree/Project + 节点查找 |
 | 爆炸数学 | `inject/explodeMath.ts` | 高 | 已覆盖（13） | P0 | 纯数学函数，零依赖 |
 | 聚焦树逻辑 | `inject/focusTree.ts` | 高 | 已覆盖（9） | P0 | 纯树遍历，零依赖 |
-| 消息路由 | `inject/messageRouter.ts` | 中 | 无 | P1 | action→handler 分发，可 mock handler |
-| Panel Store | `panel/store/index.ts` | 中 | 部分（select/reveal+history） | P1 | mock `chrome.tabs` |
+| 消息路由 | `inject/messageRouter.ts` | 中 | 已覆盖（16） | P1 | action→handler 分发，mock 子模块 |
+| Panel Store | `panel/store/index.ts` | 中 | 部分（select/reveal+history） | P1 | mock `Bridge`（setBridge 注入） |
 | 导航工具 | `panel/utils/navigation.ts` | 高 | 已覆盖（8） | P1 | 祖先链/可见节点计算，纯逻辑 |
-| 覆盖层管理 | `inject/overlayManager.ts` | 中 | 无 | P2 | 高亮边框，需 mock Paper.js Item |
-| 拾取器模式 | `inject/pickerMode.ts` | 中 | 无 | P2 | Canvas 点击 + Scope 切换，需 mock |
-| 爆炸预览 | `inject/explodeMode.ts` | 中 | 无 | P2 | 拖拽手柄控制散开，需 mock |
+| 覆盖层管理 | `inject/overlayManager.ts` | 中 | 已覆盖（6） | P2 | mock Paper.js Item + DOM |
+| 拾取器模式 | `inject/pickerMode.ts` | 中 | 已覆盖（6） | P2 | mock Canvas 事件 + DOM |
+| 爆炸预览 | `inject/explodeMode.ts` | 中 | 已覆盖（6） | P2 | mock Paper.js Group + DOM |
 | 聚焦模式 | `inject/focusMode.ts` | 中 | 已覆盖（8） | P2 | 快照生命周期 |
-| 检测 | `inject/index.ts` | 低 | 无 | P3 | 轮询+MutationObserver，集成测试 |
+| 检测 | `inject/index.ts` | 低 | 已覆盖（8） | P3 | mock window + __PAPER_SCOPES__ |
+| 注入入口 | `inject/parse.ts` | 低 | 已覆盖（2） | P3 | 监听器注册 + 路由器初始化 |
+| 通信桥接 | `shared/bridge.ts` + `extensionBridge.ts` | 高 | 间接覆盖 | P1 | Bridge 接口，store 测试间接验证 |
 | UI 组件 | `panel/components/*` | 中 | 无 | P3 | 需 @testing-library（未引入） |
 | Content Script | `content/index.ts` | 低 | 无 | P3 | chrome API 中继，集成测试 |
 | Background | `background/index.ts` | 低 | 无 | P4 | 空实现 |
@@ -190,6 +195,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 1. **CustomEvent 而非 postMessage**：注入脚本和 Content Script 通过 DOM 事件通信，无需序列化，支持 `detail` 携带任意结构化数据
 2. **run_at: document_start**：必须在 Paper.js 初始化之前开始监听
 3. **Inject 独立构建**：运行在页面上下文（非扩展隔离环境），需 IIFE 格式，无法使用 `chrome.runtime` API
+4. **Bridge 通信抽象层**：Panel Store 不直接调 `chrome.*` API，而是通过 `Bridge` 接口（`shared/bridge.ts`）通信，由入口处 `setBridge` 注入实现。扩展模式用 `ExtensionBridge`（走 Content Script 中继），本地模式将用 `LocalBridge`（同页面直接调用）。解耦后 Store 可测性提升（mock bridge 即可），并为 devtool-local 铺路
 
 ## 9. 构建配置要点
 
@@ -215,6 +221,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-06 | 重构 | 引入 Bridge 通信抽象层，Panel Store 解耦 chrome API（阶段1，为 devtool-local 铺路） | shared, panel | `shared/bridge.ts`, `shared/extensionBridge.ts`, `panel/store/index.ts`, `panel/index.tsx`, `hooks/useDevToolsCleanup.ts` |
 | 2026-07-06 | 重构 | 拆分 inject/parse.ts 上帝文件（1227行）为 6 个职责模块 | inject | `parse.ts`, `sceneTreeBuilder.ts`, `overlayManager.ts`, `pickerMode.ts`, `explodeMode.ts`, `focusMode.ts`, `messageRouter.ts` |
 | 2026-07-06 | 文档 | 初始化项目知识库文档 | 文档 | `docs/PROJECT_KNOWLEDGE.md` |
 

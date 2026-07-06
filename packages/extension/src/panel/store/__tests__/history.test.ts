@@ -1,38 +1,32 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { setBridge, type Bridge } from '@/shared/bridge';
 import { usePaperStore } from '../index';
 import type { PaperNode } from '../index';
 
-// Mock chrome API
-const mockQuery = vi.fn();
-const mockSendMessage = vi.fn();
-globalThis.chrome = {
-  tabs: { query: mockQuery, sendMessage: mockSendMessage },
-  runtime: { onMessage: { addListener: vi.fn() }, lastError: undefined as any },
-} as any;
-
-// chrome.tabs.query 同步调用回调，返回 [{ id: 1 }]
-mockQuery.mockImplementation((_query: any, cb: any) => cb([{ id: 1 }]));
-
-// 辅助：让 sendMessage 根据 message.nodeId 返回模拟节点
-function setupSendMessageMock() {
-  mockSendMessage.mockImplementation((_tabId: number, message: any, cb: any) => {
-    if (message.action === 'SELECT_NODE') {
-      cb({
-        node: {
-          id: message.nodeId,
-          name: `Node-${message.nodeId}`,
-          type: 'Path',
-          children: [],
-          properties: {},
-          visible: true,
-          selected: false,
-        } as PaperNode,
-      });
-    } else {
-      // CLEAR_HIGHLIGHT 等其他 action，返回空
-      cb({});
-    }
-  });
+// Mock Bridge：SELECT_NODE 返回模拟节点，其它 action 返回空
+function setupBridgeMock() {
+  const mockBridge: Bridge = {
+    send: vi.fn((message: any, cb: any) => {
+      if (message.action === 'SELECT_NODE') {
+        cb({
+          node: {
+            id: message.nodeId,
+            name: `Node-${message.nodeId}`,
+            type: 'Path',
+            children: [],
+            properties: {},
+            visible: true,
+            selected: false,
+          } as PaperNode,
+        });
+      } else {
+        // CLEAR_HIGHLIGHT 等其他 action，返回空
+        cb({});
+      }
+    }),
+    onEvent: vi.fn(() => () => {}),
+  };
+  setBridge(mockBridge);
 }
 
 function resetStore() {
@@ -49,9 +43,7 @@ function resetStore() {
 describe('selection history stack', () => {
   beforeEach(() => {
     resetStore();
-    mockQuery.mockClear();
-    mockSendMessage.mockClear();
-    setupSendMessageMock();
+    setupBridgeMock();
   });
 
   it('选中节点 A 后再选中 B，历史栈为 [A, B]', () => {

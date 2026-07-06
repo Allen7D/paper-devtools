@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { HIGHLIGHT_TYPE, PANEL_ACTION, RUNTIME_ACTION } from '@/shared/constants';
+import { getBridge } from '@/shared/bridge';
 
 /**
  * 将指定节点的祖先链加入 `expandedNodes` 集合，确保该节点在场景树中可见。
@@ -195,18 +196,14 @@ let scopeChangeListenerAdded = false;
 /**
  * 向当前激活标签页发送消息。
  *
- * 封装 `chrome.tabs.query` + `chrome.tabs.sendMessage` 两步操作，
- * 自动定位当前窗口的激活标签页并转发消息到 Content Script。
+ * 委托给当前注入的 Bridge 实例（扩展模式走 Content Script 中继，
+ * 本地模式走同页面直接调用），由入口处通过 `setBridge` 注入具体实现。
  *
  * @param message 消息体，需包含 `action` 字段
- * @param callback 响应回调
+ * @param callback 响应回调；`error` 存在表示通信失败
  */
-function sendToTab(message: any, callback: (response: any) => void) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const tabId = tabs[0]?.id;
-    if (!tabId) return;
-    chrome.tabs.sendMessage(tabId, message, callback);
-  });
+function sendToTab(message: any, callback: (response: any, error?: string) => void) {
+  getBridge().send(message, callback);
 }
 
 export const usePaperStore = create<PaperStore>((set, get) => ({
@@ -245,20 +242,16 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   initialize: async () => {
     set({ connectionStatus: '正在连接...' });
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tabId = tabs[0]?.id;
-      if (!tabId) return;
+    sendToTab({ action: PANEL_ACTION.DETECT_PAPER_JS }, (response, error) => {
+      if (error) {
+        set({
+          connected: false,
+          connectionStatus: '无法连接, 错误信息(' + error + ')'
+        });
+        return;
+      }
 
-      chrome.tabs.sendMessage(tabId, { action: PANEL_ACTION.DETECT_PAPER_JS }, (response) => {
-        if (chrome.runtime.lastError) {
-          set({
-            connected: false,
-            connectionStatus: '无法连接, 错误信息(' + chrome.runtime.lastError.message + ')'
-          });
-          return;
-        }
-
-        if (response && response.detected) {
+      if (response && response.detected) {
           set({
             connected: true,
             connectionStatus: '已连接',
@@ -276,11 +269,10 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
           });
         }
       });
-    });
 
     if (!scopeChangeListenerAdded) {
       scopeChangeListenerAdded = true;
-      chrome.runtime.onMessage.addListener((message) => {
+      getBridge().onEvent((message) => {
         // Scope 列表变化：更新 Scope 列表，处理新增/移除/激活场景
         if (message.action === RUNTIME_ACTION.SCOPE_CHANGE) {
           set({
@@ -340,7 +332,7 @@ export const usePaperStore = create<PaperStore>((set, get) => ({
   /** 从页面重新拉取场景树并更新本地状态，失败时标记为断开连接。 */
   refreshSceneTree: () => {
     sendToTab({ action: PANEL_ACTION.GET_SCENE_TREE }, (response) => {
-      if (chrome.runtime.lastError || !response) {
+      if (!response) {
         set({
           connected: false,
           connectionStatus: '获取场景树失败'

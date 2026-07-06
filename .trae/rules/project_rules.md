@@ -35,7 +35,7 @@ pnpm --filter <name> <cmd>  # 单项目操作
 DevTools Panel (React) ──chrome.tabs.sendMessage──▶ Content Script ──CustomEvent──▶ Injected Scripts ──直接访问──▶ Paper.js API
 ```
 
-- **Panel → Content Script**: `chrome.tabs.sendMessage`，消息格式 `{ action, ...params }`
+- **Panel → Bridge → Content Script**: Panel Store 通过 `Bridge` 接口（`shared/bridge.ts`）发消息，扩展模式由 `ExtensionBridge` 封装 `chrome.tabs.sendMessage`。消息格式 `{ action, ...params }`
 - **Content Script → Injected Script**: `CustomEvent('PAPER_DEVTOOLS_MESSAGE')`，携带 `messageId` 用于异步响应匹配
 - **Injected Script → Content Script**: `CustomEvent('PAPER_DEVTOOLS_RESPONSE')`，携带相同 `messageId`
 
@@ -70,6 +70,8 @@ DevTools Panel (React) ──chrome.tabs.sendMessage──▶ Content Script ─
 | Inject (聚焦) | `packages/extension/src/inject/focusMode.ts` | 聚焦模式 |
 | Inject (消息路由) | `packages/extension/src/inject/messageRouter.ts` | DevTools 消息分发 |
 | Inject (属性提取) | `packages/extension/src/inject/extra.ts` | 属性提取函数 |
+| 通信桥接接口 | `packages/extension/src/shared/bridge.ts` | Bridge 接口 + setBridge/getBridge 依赖注入 |
+| 扩展桥接实现 | `packages/extension/src/shared/extensionBridge.ts` | ExtensionBridge：封装 chrome.tabs.sendMessage + onMessage |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
 | MV3 清单 | `packages/extension/manifest.config.ts` | CRXJS defineManifest |
 | Vite 配置 | `packages/extension/vite.config.ts` | 主构建配置 |
