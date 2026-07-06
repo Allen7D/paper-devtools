@@ -80,7 +80,7 @@ describe('ExtensionBridge', () => {
     setupChromeMock(7, 'Could not establish connection');
 
     const bridge = new ExtensionBridge();
-    bridge.send({ action: 'GET_SCENE_TREE' }, (response, error) => {
+    bridge.send({ action: 'GET_SCENE_TREE' }, (_response, error) => {
       expect(error).toBe('Could not establish connection');
     });
   });
