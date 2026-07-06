@@ -151,10 +151,13 @@ App (packages/extension/src/panel/App.tsx)
 
 | 模块 | 文件 | 可测性 | 当前覆盖 | 优先级 | 说明 |
 |------|------|--------|----------|--------|------|
-| 属性提取 | `inject/extra.ts` | 高 | 无 | P0 | 纯函数，提取 Item 属性，最易测 |
-| 场景树构建 | `inject/sceneTreeBuilder.ts` | 高 | 无 | P0 | 构建 PaperNode 树、节点查找，核心逻辑 |
+| 属性提取 | `inject/extra.ts` | 高 | 已覆盖（12） | P0 | 纯函数，提取 Item/Project 属性 |
+| 场景树构建 | `inject/sceneTreeBuilder.ts` | 高 | 无 | P0 | buildScopeTree/Project 未测 |
+| 爆炸数学 | `inject/explodeMath.ts` | 高 | 已覆盖（13） | P0 | 纯数学函数，零依赖 |
+| 聚焦树逻辑 | `inject/focusTree.ts` | 高 | 已覆盖（9） | P0 | 纯树遍历，零依赖 |
 | 消息路由 | `inject/messageRouter.ts` | 中 | 无 | P1 | action→handler 分发，可 mock handler |
-| Panel Store | `panel/store/index.ts` | 中 | 无 | P1 | mock `chrome.tabs` 即可测 actions |
+| Panel Store | `panel/store/index.ts` | 中 | 部分（select/reveal+history） | P1 | mock `chrome.tabs` |
+| 导航工具 | `panel/utils/navigation.ts` | 高 | 已覆盖（8） | P1 | 祖先链/可见节点计算，纯逻辑 |
 | 覆盖层管理 | `inject/overlayManager.ts` | 中 | 无 | P2 | 高亮边框，需 mock Paper.js Item |
 | 拾取器模式 | `inject/pickerMode.ts` | 中 | 无 | P2 | Canvas 点击 + Scope 切换，需 mock |
 | 爆炸预览 | `inject/explodeMode.ts` | 中 | 无 | P2 | 拖拽手柄控制散开，需 mock |
@@ -200,7 +203,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 项目 | 状态 |
 |------|------|
-| 测试架构 | 未建立（Vitest 已配置但无测试文件） |
+| 测试架构 | 部分建立（inject 纯逻辑 + panel store/utils 已覆盖，通信层/UI 未覆盖） |
 | Background Script | 空实现 |
 | Extension ESLint | 未配置（仅 example 项目有） |
 | 错误处理 | 基础级别，缺少统一错误处理机制 |

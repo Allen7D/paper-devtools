@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractItemProperties } from '../extra';
+import { extractItemProperties, extractProjectProperties } from '../extra';
 
 /**
  * 构造一个模拟 paper.js Color 的对象，复刻其 toCSS 行为：
@@ -74,5 +74,62 @@ describe('extractItemProperties - 颜色透明度保留', () => {
     const item = makeItem({ fillColor: makeColor(255, 0, 0, 0) });
     const { fillColor } = extractItemProperties(item);
     expect(fillColor).toBe('rgba(255,0,0,0)');
+  });
+});
+
+describe('extractProjectProperties', () => {
+  it('完整提取 viewSize 和 layersCount', () => {
+    const project = {
+      view: { size: { width: 100, height: 200 } },
+      layers: [{}, {}, {}],
+    };
+    expect(extractProjectProperties(project as any)).toEqual({
+      type: 'Project',
+      viewSize: { width: 100, height: 200 },
+      layersCount: 3,
+    });
+  });
+
+  it('无 view 时不包含 viewSize', () => {
+    const project = { layers: [] };
+    expect(extractProjectProperties(project as any)).toEqual({
+      type: 'Project',
+      layersCount: 0,
+    });
+  });
+
+  it('无 layers 时不包含 layersCount', () => {
+    const project = { view: { size: { width: 50, height: 50 } } };
+    expect(extractProjectProperties(project as any)).toEqual({
+      type: 'Project',
+      viewSize: { width: 50, height: 50 },
+    });
+  });
+});
+
+describe('extractItemProperties - 字段提取', () => {
+  it('完整提取 position/bounds/strokeWidth/opacity/closed', () => {
+    const item = {
+      position: { x: 1, y: 2 },
+      bounds: { x: 0, y: 0, width: 10, height: 20 },
+      strokeWidth: 2,
+      opacity: 0.8,
+      closed: true,
+    };
+    const props = extractItemProperties(item as any);
+    expect(props.position).toEqual({ x: 1, y: 2 });
+    expect(props.bounds).toEqual({ x: 0, y: 0, width: 10, height: 20 });
+    expect(props.strokeWidth).toBe(2);
+    expect(props.opacity).toBe(0.8);
+    expect(props.closed).toBe(true);
+  });
+
+  it('部分字段缺失时只提取存在的字段', () => {
+    const item = { position: { x: 1, y: 2 } };
+    const props = extractItemProperties(item as any);
+    expect(props.position).toEqual({ x: 1, y: 2 });
+    expect(props.bounds).toBeUndefined();
+    expect(props.fillColor).toBeUndefined();
+    expect(props.strokeWidth).toBeUndefined();
   });
 });

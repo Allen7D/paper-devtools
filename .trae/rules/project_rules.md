@@ -185,7 +185,7 @@ inject/index.ts 轮询检测 (10次 × 1秒)
 
 | 项目 | 状态 |
 |------|------|
-| 测试架构 | ⚠️ 未建立（Vitest 已配置但无测试文件） |
+| 测试架构 | ⚠️ 部分建立（inject 纯逻辑 + panel store/utils 已覆盖，通信层/UI 未覆盖） |
 | Background Script | ⚠️ 空实现 |
 | Extension ESLint | ⚠️ 未配置（仅 example 项目有） |
 | 错误处理 | ⚠️ 基础级别，缺少统一错误处理机制 |
