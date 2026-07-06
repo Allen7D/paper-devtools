@@ -171,7 +171,7 @@ inject/index.ts 轮询检测 (10次 × 1秒)
 
 1. **判断改动类型**
    - 纯函数 / 工具函数 / 类型定义 → 必须补单测
-   - 核心可测逻辑（`sceneTreeBuilder` / `messageRouter` / `extra` 等高可测性模块）→ 必须补单测
+   - 核心可测逻辑（`sceneTreeBuilder` / `messageRouter` / `extra` / `explodeMode` / `explodeMath` 等高可测性模块）→ 必须补单测
    - Bug 修复 → 先写复现测试（红），再修复（绿）
    - UI 组件渲染 / 交互 → 补组件测试（引入 `@testing-library` 后）
    - Chrome API / Paper.js 上下文调用 → 用 mock 补集成测试；无法 mock 的标注"需手动验证"
@@ -180,6 +180,8 @@ inject/index.ts 轮询检测 (10次 × 1秒)
 2. **检查是否改变已有测试覆盖的行为** → 是则更新对应测试
 
 3. **跑 `npx vitest run`**，全绿才算完成
+
+> **强制规则**：步骤 1 判定为"必须补单测"的改动，在回复用户"完成"之前必须先新增对应测试文件中的用例。不允许先跳过测试、等用户提醒后再补。
 
 ### 测试文档同步
 
