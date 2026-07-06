@@ -44,7 +44,8 @@ function ensureExplodeHandleStyle() {
   style.id = '__paper_devtools_explode_style__';
   style.textContent =
     '.__paper_devtools_explode_handle__{width:8px;height:8px;transition:width .15s,height .15s}' +
-    '.__paper_devtools_explode_handle__:hover{width:18px;height:18px}';
+    '.__paper_devtools_explode_handle__:hover{width:18px;height:18px}' +
+    '.__paper_devtools_explode_handle__::before{content:"";position:absolute;inset:-12px;border-radius:50%}';
   document.head.appendChild(style);
 }
 
