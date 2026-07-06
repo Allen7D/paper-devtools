@@ -108,7 +108,13 @@ Paper.js 中每个 `PaperScope` 对应一个独立的项目上下文（通常绑
 | Panel | `packages/extension/src/panel/index.tsx` | React 面板入口 |
 | Panel Store | `packages/extension/src/panel/store/index.ts` | Zustand 状态管理 |
 | Inject (检测) | `packages/extension/src/inject/index.ts` | Paper.js 轮询检测 + MutationObserver |
-| Inject (解析) | `packages/extension/src/inject/parse.ts` | 场景树构建 + 消息处理 |
+| Inject (入口) | `packages/extension/src/inject/parse.ts` | 全局事件监听注册 + 消息路由器初始化 |
+| Inject (场景树) | `packages/extension/src/inject/sceneTreeBuilder.ts` | 场景树构建 + 节点查找 + Scope/Project/View 获取 |
+| Inject (覆盖层) | `packages/extension/src/inject/overlayManager.ts` | 高亮覆盖层管理（选中/悬停边框） |
+| Inject (拾取器) | `packages/extension/src/inject/pickerMode.ts` | 拾取器模式 + Canvas 点击自动切换 Scope |
+| Inject (爆炸预览) | `packages/extension/src/inject/explodeMode.ts` | Group 爆炸预览模式（拖拽手柄控制子图元散开） |
+| Inject (聚焦) | `packages/extension/src/inject/focusMode.ts` | 聚焦模式（隐藏祖先兄弟，孤立显示子树） |
+| Inject (消息路由) | `packages/extension/src/inject/messageRouter.ts` | DevTools 消息分发（action → handler switch） |
 | Inject (属性提取) | `packages/extension/src/inject/extra.ts` | 属性提取函数 |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
 | MV3 清单 | `packages/extension/manifest.config.ts` | CRXJS defineManifest |

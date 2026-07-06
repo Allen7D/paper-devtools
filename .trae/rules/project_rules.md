@@ -62,7 +62,13 @@ DevTools Panel (React) ──chrome.tabs.sendMessage──▶ Content Script ─
 | Panel | `packages/extension/src/panel/index.tsx` | React 面板入口 |
 | Panel Store | `packages/extension/src/panel/store/index.ts` | Zustand 状态管理 |
 | Inject (检测) | `packages/extension/src/inject/index.ts` | Paper.js 轮询检测 + MutationObserver |
-| Inject (解析) | `packages/extension/src/inject/parse.ts` | 场景树构建 + 消息处理 |
+| Inject (入口) | `packages/extension/src/inject/parse.ts` | 全局事件监听注册 + 消息路由器初始化 |
+| Inject (场景树) | `packages/extension/src/inject/sceneTreeBuilder.ts` | 场景树构建 + 节点查找 |
+| Inject (覆盖层) | `packages/extension/src/inject/overlayManager.ts` | 高亮覆盖层管理 |
+| Inject (拾取器) | `packages/extension/src/inject/pickerMode.ts` | 拾取器模式 + Canvas 点击切换 Scope |
+| Inject (爆炸预览) | `packages/extension/src/inject/explodeMode.ts` | Group 爆炸预览模式 |
+| Inject (聚焦) | `packages/extension/src/inject/focusMode.ts` | 聚焦模式 |
+| Inject (消息路由) | `packages/extension/src/inject/messageRouter.ts` | DevTools 消息分发 |
 | Inject (属性提取) | `packages/extension/src/inject/extra.ts` | 属性提取函数 |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
 | MV3 清单 | `packages/extension/manifest.config.ts` | CRXJS defineManifest |
