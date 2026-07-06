@@ -163,6 +163,13 @@ let overlayContainer: HTMLDivElement | null = null;
 let highlightedNodeId: string | null = null;
 /** 当前悬停节点的 ID */
 let hoveredNodeId: string | null = null;
+/**
+ * 当前悬停是否来自拾取器（Canvas 命中测试）。
+ *
+ * 拾取器悬停的图元若已隐藏则不显示蓝色虚线边框；场景树 hover
+ * （经 HIGHLIGHT_NODE 进入）不受此限制，仍对隐藏节点显示边框。
+ */
+let hoverFromPicker = false;
 /** 是否启用选中高亮覆盖层 */
 let overlayEnabled = true;
 /** 拾取器模式是否激活 */
@@ -339,7 +346,18 @@ function updateOverlayPosition(type: HighlightType, nodeId: string) {
  */
 function syncAllOverlays() {
   if (overlayEnabled && highlightedNodeId) updateOverlayPosition(HIGHLIGHT_TYPE.SELECTED, highlightedNodeId);
-  if (hoveredNodeId) updateOverlayPosition(HIGHLIGHT_TYPE.HOVER, hoveredNodeId);
+  if (hoveredNodeId) {
+    // 拾取器悬停的图元若已隐藏，则清除蓝色虚线边框
+    // （场景树 hover 不受此限制，仍对隐藏节点显示边框）
+    if (hoverFromPicker) {
+      const item = findPaperItemById(hoveredNodeId);
+      if (item && !item.visible) {
+        hideHighlight(HIGHLIGHT_TYPE.HOVER);
+        return;
+      }
+    }
+    updateOverlayPosition(HIGHLIGHT_TYPE.HOVER, hoveredNodeId);
+  }
 }
 
 /**
@@ -382,6 +400,7 @@ function hideHighlight(type: HighlightType) {
   if (type === HIGHLIGHT_TYPE.HOVER && hoverOverlay) {
     hoverOverlay.style.display = 'none';
     hoveredNodeId = null;
+    hoverFromPicker = false;
   }
 }
 
@@ -406,6 +425,7 @@ function clearAllOverlays() {
   }
   highlightedNodeId = null;
   hoveredNodeId = null;
+  hoverFromPicker = false;
 }
 
 /**
@@ -565,6 +585,8 @@ function enablePicker() {
     if (hitResult && hitResult.item) {
       const nodeId = findNodeIdByItem(hitResult.item);
       if (nodeId) {
+        // 标记悬停来自拾取器：syncAllOverlays 会据此对隐藏图元清除边框
+        hoverFromPicker = true;
         showHighlight(nodeId, HIGHLIGHT_TYPE.HOVER);
       }
     } else {
@@ -1131,6 +1153,11 @@ window.addEventListener(INJECT_EVENT.PAPER_DEVTOOLS_MESSAGE, function (event) {
       break;
     case PANEL_ACTION.HIGHLIGHT_NODE:
       if (message.nodeId) {
+        // 场景树 hover 来自 HIGHLIGHT_NODE，标记为非拾取器来源，
+        // 使 syncAllOverlays 不对隐藏节点清除蓝色虚线边框
+        if ((message.type || HIGHLIGHT_TYPE.SELECTED) === HIGHLIGHT_TYPE.HOVER) {
+          hoverFromPicker = false;
+        }
         showHighlight(message.nodeId, message.type || HIGHLIGHT_TYPE.SELECTED);
         response = { success: true };
       }
