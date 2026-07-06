@@ -31,6 +31,19 @@ export function extractProjectProperties(project: paper.Project): NodeProjectPro
 }
 
 /**
+ * 将 paper.js Color 转为 CSS 字符串，保留透明度。
+ *
+ * 注意：paper.js 的 `toCSS(true)`（hex 模式）会丢弃 alpha 通道，
+ * 因此当颜色存在透明度（alpha < 1）时改用 `toCSS(false)`（rgba 模式）输出，
+ * 使 DevTools 面板能够显示并修改 fillColor / strokeColor 的透明度。
+ */
+function colorToCssWithAlpha(color: paper.Color): string {
+  if (!color.toCSS) return String(color);
+  // alpha >= 1（含未设置 alpha 的默认值 1）用 hex；半透明用 rgba 保留透明度
+  return color.toCSS(color.alpha >= 1);
+}
+
+/**
  * 提取 paper.js 图元的属性。
  *
  * 从 Item 实例中提取位置、边界框、填充颜色、描边颜色、描边宽度、
@@ -60,14 +73,14 @@ export function extractItemProperties(item: paper.Item): NodeItemPropertie {
     };
   }
 
-  // 填充颜色
+  // 填充颜色（保留透明度）
   if (item.fillColor) {
-    properties.fillColor = item.fillColor.toCSS ? item.fillColor.toCSS(true) : String(item.fillColor);
+    properties.fillColor = colorToCssWithAlpha(item.fillColor);
   }
 
-  // 描边颜色
+  // 描边颜色（保留透明度）
   if (item.strokeColor) {
-    properties.strokeColor = item.strokeColor.toCSS ? item.strokeColor.toCSS(true) : String(item.strokeColor);
+    properties.strokeColor = colorToCssWithAlpha(item.strokeColor);
   }
 
   // 描边宽度
