@@ -13,6 +13,8 @@ let explodeGroupItem: paper.Group | null = null;
 let explodeOrigins: Point[] = [];
 /** 递归收集的叶子图元数组（非 Group，爆炸时逐个移动） */
 let explodeLeaves: paper.Item[] = [];
+/** 爆炸前 clipMask 为 true 的叶子图元（退出时恢复） */
+let explodeClipMasks: paper.Item[] = [];
 /** Group 中心点（Paper.js 坐标系） */
 let explodeCenter: Point = { x: 0, y: 0 };
 /** 子图元最大远离距离（Paper.js 坐标系单位） */
@@ -232,6 +234,10 @@ export function enableExplodeMode(nodeId: string): { success: boolean; reason?: 
       return { x: pos.x, y: pos.y };
     });
 
+    // 临时禁用 clipMask，避免爆炸时裁剪关系错乱
+    explodeClipMasks = explodeLeaves.filter(leaf => (leaf as any).clipMask === true);
+    explodeClipMasks.forEach(leaf => { (leaf as any).clipMask = false; });
+
     // 中心与最大远离距离
     explodeCenter = { x: group.position.x, y: group.position.y };
     const diag = Math.hypot(group.bounds.width, group.bounds.height);
@@ -301,6 +307,9 @@ export function disableExplodeMode(): { success: boolean } {
       delete (leaf as any).data.__explodeOrigin__;
     }
   });
+  // 恢复 clipMask 状态
+  explodeClipMasks.forEach(leaf => { (leaf as any).clipMask = true; });
+  explodeClipMasks = [];
   const view = getActiveView();
   if (view) view.update();
 

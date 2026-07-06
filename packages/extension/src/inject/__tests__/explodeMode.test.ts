@@ -86,4 +86,23 @@ describe('explodeMode', () => {
     // 清理
     disableExplodeMode();
   });
+
+  it('爆炸时临时禁用 clipMask，退出时恢复', () => {
+    const child1 = { position: { x: 0, y: 0 }, data: {}, clipMask: true } as any;
+    const child2 = { position: { x: 10, y: 0 }, data: {}, clipMask: false } as any;
+    vi.mocked(findPaperItemById).mockReturnValue({
+      className: 'Group',
+      children: [child1, child2],
+      bounds: { width: 20, height: 10 },
+      position: { x: 5, y: 0 },
+    } as any);
+
+    enableExplodeMode('root_0');
+    expect(child1.clipMask).toBe(false); // 被禁用
+    expect(child2.clipMask).toBe(false); // 本来就是 false
+
+    disableExplodeMode();
+    expect(child1.clipMask).toBe(true);  // 恢复
+    expect(child2.clipMask).toBe(false); // 本来就是 false，不恢复
+  });
 });
