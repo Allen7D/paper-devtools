@@ -15,6 +15,7 @@ pnpm run dev:example      # 启动示例应用
 pnpm run build:example    # 构建示例应用
 pnpm run dev:all          # 并行启动所有子项目
 pnpm run build:all        # 构建所有子项目
+pnpm run test:e2e         # 运行 E2E 测试（devtool-local，自动起 dev server）
 pnpm --filter <name> <cmd>  # 单项目操作
 ```
 

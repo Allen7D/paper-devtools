@@ -227,6 +227,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-06 | 新增 | 接入 Playwright E2E 测试，覆盖 devtool-local 端到端交互（连接/场景树/选中/可见性/多Scope/属性） | e2e | `playwright.config.ts`, `e2e/local.spec.ts`, `package.json` |
 | 2026-07-06 | 增强 | devtool-local 支持多 Scope 创建/删除（复用 example 绘图函数，配套 @example alias） | devtool-local | `devtool-local/src/scene.ts`, `devtool-local/vite.config.ts`, `devtool-local/tsconfig.json` |
 | 2026-07-06 | 新增 | devtool-local 包：脱离 Chrome 扩展的本地运行版本（LocalBridge 同页面通信，复用 Panel UI + Inject 逻辑） | devtool-local, inject | `devtool-local/`, `inject/setup.ts`, `inject/index.ts` |
 | 2026-07-06 | 重构 | 引入 Bridge 通信抽象层，Panel Store 解耦 chrome API（阶段1，为 devtool-local 铺路） | shared, panel | `shared/bridge.ts`, `shared/extensionBridge.ts`, `panel/store/index.ts`, `panel/index.tsx`, `hooks/useDevToolsCleanup.ts` |

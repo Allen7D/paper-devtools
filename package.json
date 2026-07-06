@@ -13,6 +13,8 @@
     "preview:example": "pnpm --filter @devtool/example preview",
     "dev:local": "pnpm --filter @devtool/local dev",
     "build:local": "pnpm --filter @devtool/local build",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "lint:example": "pnpm --filter @devtool/example lint",
     "dev:all": "pnpm -r --parallel dev",
     "build:all": "pnpm -r build"
@@ -20,6 +22,7 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.3",
     "@eslint/js": "^9.30.1",
+    "@playwright/test": "^1.61.1",
     "@react-dev-inspector/vite-plugin": "^2.0.1",
     "@types/chrome": "^0.1.1",
     "@types/less": "^3.0.8",
