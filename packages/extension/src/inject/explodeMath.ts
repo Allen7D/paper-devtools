@@ -14,7 +14,7 @@ export interface Point {
  *
  * 每个子图元沿"自身原始位置 → Group 中心"的反方向径向远离中心，
  * 远离距离 = `factor * maxDist`。子图元恰在中心点时方向向量退化，
- * 保持原地不动。
+ * 改为在零向量子图元中均匀分配角度（`2π * i / n`），避免堆叠。
  *
  * @param origins 子图元原始位置数组（中心坐标）
  * @param center Group 中心点
@@ -28,12 +28,16 @@ export function computeExplodePositions(
   factor: number,
   maxDist: number
 ): Point[] {
-  return origins.map(origin => {
+  // 先收集零向量子图元的索引
+  const zeroIndices: number[] = [];
+  const results: Point[] = origins.map((origin, i) => {
     const dx = origin.x - center.x;
     const dy = origin.y - center.y;
     const len = Math.hypot(dx, dy);
-    // 子图元恰在中心点：零向量退化，保持原地
-    if (len < 1e-6) return { x: origin.x, y: origin.y };
+    if (len < 1e-6) {
+      zeroIndices.push(i);
+      return origin; // 占位，稍后填充
+    }
     const ux = dx / len;
     const uy = dy / len;
     return {
@@ -41,6 +45,21 @@ export function computeExplodePositions(
       y: origin.y + uy * factor * maxDist,
     };
   });
+
+  // 零向量子图元：以中心为圆心，均匀分布在圆周上
+  const n = zeroIndices.length;
+  if (n > 0) {
+    const offset = factor * maxDist;
+    zeroIndices.forEach((idx, i) => {
+      const angle = (2 * Math.PI * i) / n;
+      results[idx] = {
+        x: center.x + Math.cos(angle) * offset,
+        y: center.y + Math.sin(angle) * offset,
+      };
+    });
+  }
+
+  return results;
 }
 
 /**

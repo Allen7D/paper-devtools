@@ -103,6 +103,22 @@ export function createShapes(paperScope: paper.PaperScope) {
 	});
 	gradientCircle.name = 'Gradient Circle';
 
+	// 同心圆组合：所有子图元共享同一中心，用于测试爆炸模式零向量处理
+	const concentricGroup = new paperScope.Group();
+	concentricGroup.name = 'Concentric Circles Group';
+	const concentricCenter = new paperScope.Point(600, 320);
+	const concentricColors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a855f7', '#20c997'];
+	for (let i = 0; i < concentricColors.length; i++) {
+		const ring = new paperScope.Path.Circle({
+			center: concentricCenter,
+			radius: 12 + i * 8,
+			strokeColor: concentricColors[i],
+			strokeWidth: 3,
+		});
+		ring.name = `Concentric Ring ${i + 1}`;
+		concentricGroup.addChild(ring);
+	}
+
 	// === 图层 2: 路径和线条 ===
 	pathsLayer.activate();
 
