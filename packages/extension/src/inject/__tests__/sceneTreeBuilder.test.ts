@@ -72,8 +72,8 @@ describe('buildScopeProject', () => {
     };
     const node = buildScopeProject(project as any);
     expect(node.children).toHaveLength(2);
-    expect(node.children[0].id).toBe('root_0');
-    expect(node.children[1].id).toBe('root_1');
+    expect(node.children![0].id).toBe('root_0');
+    expect(node.children![1].id).toBe('root_1');
   });
 
   it('layers 缺省时 children 为空数组', () => {

@@ -9,6 +9,8 @@ export default defineConfig({
     alias: {
       // 复用 extension 包的源码（shared / inject / panel）
       '@': resolve(__dirname, '../extension/src'),
+      // 复用 example 包的绘图函数
+      '@example': resolve(__dirname, '../example/src'),
     },
   },
   css: {

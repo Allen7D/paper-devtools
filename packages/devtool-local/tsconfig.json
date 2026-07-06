@@ -9,8 +9,9 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["../extension/src/*"]
+      "@/*": ["../extension/src/*"],
+      "@example/*": ["../example/src/*"]
     }
   },
-  "include": ["src", "../extension/src"]
+  "include": ["src", "../extension/src", "../example/src"]
 }

@@ -227,6 +227,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-06 | 增强 | devtool-local 支持多 Scope 创建/删除（复用 example 绘图函数，配套 @example alias） | devtool-local | `devtool-local/src/scene.ts`, `devtool-local/vite.config.ts`, `devtool-local/tsconfig.json` |
 | 2026-07-06 | 新增 | devtool-local 包：脱离 Chrome 扩展的本地运行版本（LocalBridge 同页面通信，复用 Panel UI + Inject 逻辑） | devtool-local, inject | `devtool-local/`, `inject/setup.ts`, `inject/index.ts` |
 | 2026-07-06 | 重构 | 引入 Bridge 通信抽象层，Panel Store 解耦 chrome API（阶段1，为 devtool-local 铺路） | shared, panel | `shared/bridge.ts`, `shared/extensionBridge.ts`, `panel/store/index.ts`, `panel/index.tsx`, `hooks/useDevToolsCleanup.ts` |
 | 2026-07-06 | 重构 | 拆分 inject/parse.ts 上帝文件（1227行）为 6 个职责模块 | inject | `parse.ts`, `sceneTreeBuilder.ts`, `overlayManager.ts`, `pickerMode.ts`, `explodeMode.ts`, `focusMode.ts`, `messageRouter.ts` |

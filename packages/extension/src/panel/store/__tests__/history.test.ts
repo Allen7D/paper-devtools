@@ -24,7 +24,7 @@ function setupBridgeMock() {
         cb({});
       }
     }),
-    onEvent: vi.fn(() => () => {}),
+    onEvent: vi.fn(() => () => { }),
   };
   setBridge(mockBridge);
 }
