@@ -41,6 +41,17 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease;
+  flex-shrink: 0;
+  pointer-events: auto;
+  position: relative;
+}
+.tree-node-container .tree-node .expand-icon::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.tree-node-container .tree-node .expand-icon .anticon {
+  pointer-events: none;
 }
 .tree-node-container .tree-node .expand-icon.expanded {
   transform: rotate(90deg);
@@ -59,6 +70,17 @@
   align-items: center;
   justify-content: center;
   transition: color 0.2s ease;
+  flex-shrink: 0;
+  pointer-events: auto;
+  position: relative;
+}
+.tree-node-container .tree-node .visibility-icon::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.tree-node-container .tree-node .visibility-icon .anticon {
+  pointer-events: none;
 }
 .tree-node-container .tree-node .visibility-icon:hover {
   color: #333;
@@ -80,6 +102,17 @@
   justify-content: center;
   color: #ccc;
   transition: color 0.2s ease;
+  flex-shrink: 0;
+  pointer-events: auto;
+  position: relative;
+}
+.tree-node-container .tree-node .explode-icon::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.tree-node-container .tree-node .explode-icon .anticon {
+  pointer-events: none;
 }
 .tree-node-container .tree-node .explode-icon:hover {
   color: #fa8c16;

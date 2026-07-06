@@ -52,11 +52,11 @@
       pointer-events: auto;
       position: relative;
 
-      // 扩大点击命中区域到 20×20（视觉不变，解决扩展环境下 icon 点击区域过小）
+      // 扩大点击命中区域（视觉不变，解决扩展环境下 icon 点击区域过小）
       &::before {
         content: '';
         position: absolute;
-        inset: -4px;
+        inset: -6px;
       }
 
       // icon 内容不拦截指针事件，确保点击穿透到 expand-icon span
@@ -86,6 +86,13 @@
       transition: color 0.2s ease;
       flex-shrink: 0;
       pointer-events: auto;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: -6px;
+      }
 
       .anticon {
         pointer-events: none;
@@ -117,6 +124,13 @@
       transition: color 0.2s ease;
       flex-shrink: 0;
       pointer-events: auto;
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: -6px;
+      }
 
       .anticon {
         pointer-events: none;
