@@ -31,11 +31,32 @@ describe('computeExplodePositions', () => {
     expect(result[0]).toEqual({ x: 0, y: 40 });
   });
 
-  it('子图元恰在中心点时保持原地（零向量退化）', () => {
+  it('子图元恰在中心点时均匀分布在圆周上（零向量退化）', () => {
     const origins = [{ x: 5, y: 5 }];
     const center = { x: 5, y: 5 };
     const result = computeExplodePositions(origins, center, 1, 100);
-    expect(result[0]).toEqual({ x: 5, y: 5 });
+    // 单个零向量：角度 0，位移 maxDist
+    expect(result[0]).toEqual({ x: 105, y: 5 });
+  });
+
+  it('多个零向量子图元均匀分布在圆周上', () => {
+    const center = { x: 0, y: 0 };
+    const origins = [
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+    ];
+    const result = computeExplodePositions(origins, center, 1, 50);
+    // 4 个零向量：角度 0, π/2, π, 3π/2
+    expect(result[0].x).toBeCloseTo(50);
+    expect(result[0].y).toBeCloseTo(0);
+    expect(result[1].x).toBeCloseTo(0);
+    expect(result[1].y).toBeCloseTo(50);
+    expect(result[2].x).toBeCloseTo(-50);
+    expect(result[2].y).toBeCloseTo(0);
+    expect(result[3].x).toBeCloseTo(0);
+    expect(result[3].y).toBeCloseTo(-50);
   });
 
   it('多个子图元各自沿自身方向径向远离', () => {

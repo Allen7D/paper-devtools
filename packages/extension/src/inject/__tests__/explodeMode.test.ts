@@ -22,6 +22,8 @@ describe('explodeMode', () => {
       })),
       getElementById: vi.fn(() => null),
       head: { appendChild: vi.fn() } as any,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
     });
     vi.stubGlobal('requestAnimationFrame', vi.fn((cb: () => void) => { cb(); return 1; }));
     vi.stubGlobal('window', { dispatchEvent: vi.fn() });

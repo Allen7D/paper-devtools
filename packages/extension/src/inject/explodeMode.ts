@@ -11,6 +11,8 @@ let explodeGroupId: string | null = null;
 let explodeGroupItem: paper.Group | null = null;
 /** 子图元原始位置缓存（进入爆炸模式时记录，退出时用于恢复） */
 let explodeOrigins: Point[] = [];
+/** 递归收集的叶子图元数组（非 Group，爆炸时逐个移动） */
+let explodeLeaves: paper.Item[] = [];
 /** Group 中心点（Paper.js 坐标系） */
 let explodeCenter: Point = { x: 0, y: 0 };
 /** 子图元最大远离距离（Paper.js 坐标系单位） */
@@ -31,6 +33,18 @@ let explodeCenterOverlay: { x: number; y: number } = { x: 0, y: 0 };
 let explodeHandlePos: { x: number; y: number } = { x: 0, y: 0 };
 /** 拖拽前拾取器是否激活（mouseup 时据此恢复） */
 let pickerWasActive = false;
+
+/**
+ * 递归收集 Group 下所有叶子图元（非 Group）。
+ *
+ * 嵌套 Group 中的子图元也会被展开收集，使爆炸时每个叶子独立移动。
+ */
+function collectLeafItems(item: paper.Item): paper.Item[] {
+  if (item.className === 'Group') {
+    return (item as paper.Group).children.flatMap(collectLeafItems);
+  }
+  return [item];
+}
 
 /**
  * 注入爆炸手柄的 CSS 样式（默认小尺寸，hover 放大）。
@@ -93,11 +107,11 @@ function applyExplodeFactor(factor: number) {
   if (!explodeGroupItem) return;
   explodeFactor = factor;
   const positions = computeExplodePositions(explodeOrigins, explodeCenter, factor, explodeMaxDist);
-  explodeGroupItem.children.forEach((child, i) => {
+  explodeLeaves.forEach((leaf, i) => {
     const p = positions[i];
     if (p) {
-      child.position.x = p.x;
-      child.position.y = p.y;
+      leaf.position.x = p.x;
+      leaf.position.y = p.y;
     }
   });
   const view = getActiveView();
@@ -179,7 +193,7 @@ function onExplodeHandleMouseUp() {
 /**
  * 进入 Group 爆炸预览模式。
  *
- * 1. 记录每个直接子图元的原始 position 到 `child.data.__explodeOrigin__`；
+ * 1. 递归收集所有叶子图元，记录原始 position 到 `leaf.data.__explodeOrigin__`；
  * 2. 计算 Group 中心、最大远离距离、满爆炸拖拽距离；
  * 3. 创建拖拽手柄并定位到 Group 中心。
  *
@@ -207,10 +221,14 @@ export function enableExplodeMode(nodeId: string): { success: boolean; reason?: 
     explodeGroupItem = group;
     explodeFactor = 0;
 
-    // 记录子图元原始位置
-    explodeOrigins = group.children.map(child => {
-      const pos = child.position;
-      (child as any).data.__explodeOrigin__ = { x: pos.x, y: pos.y };
+    // 递归收集叶子图元，记录原始位置
+    explodeLeaves = collectLeafItems(group);
+    if (explodeLeaves.length === 0) {
+      return { success: false, reason: 'Group 无叶子图元' };
+    }
+    explodeOrigins = explodeLeaves.map(leaf => {
+      const pos = leaf.position;
+      (leaf as any).data.__explodeOrigin__ = { x: pos.x, y: pos.y };
       return { x: pos.x, y: pos.y };
     });
 
@@ -274,13 +292,13 @@ export function resetExplode(): { success: boolean } {
  */
 export function disableExplodeMode(): { success: boolean } {
   if (!explodeGroupItem) return { success: false };
-  // 恢复子图元位置
-  explodeGroupItem.children.forEach(child => {
-    const origin = (child as any).data.__explodeOrigin__;
+  // 恢复叶子图元位置
+  explodeLeaves.forEach(leaf => {
+    const origin = (leaf as any).data.__explodeOrigin__;
     if (origin) {
-      child.position.x = origin.x;
-      child.position.y = origin.y;
-      delete (child as any).data.__explodeOrigin__;
+      leaf.position.x = origin.x;
+      leaf.position.y = origin.y;
+      delete (leaf as any).data.__explodeOrigin__;
     }
   });
   const view = getActiveView();
@@ -294,6 +312,7 @@ export function disableExplodeMode(): { success: boolean } {
   explodeGroupItem = null;
   explodeGroupId = null;
   explodeOrigins = [];
+  explodeLeaves = [];
   explodeFactor = 0;
   explodeDragStart = null;
 
