@@ -1,6 +1,6 @@
 # 项目知识库 (PROJECT_KNOWLEDGE)
 
-> 本文档是 paper-devtools 项目的"活文档"，目标是始终反映项目当前的真实状态，作为人和 Agent 快速了解项目的入口。
+> 本文档是 paper-devtools 项目的"活文档"，目标是始终反映项目当前的真实状态，作为开发者和 Agent 快速了解项目的入口。
 > 与 `.trae/rules/project_rules.md`（行为规则）互补：本文件陈述"项目是什么样"，规则文件约束"该怎么做"。
 > 维护方式见文末 [维护约定](#12-维护约定)。
 
@@ -145,6 +145,25 @@ App (packages/extension/src/panel/App.tsx)
 
 > `toggleNodeExpanded` 是唯一纯本地操作，不涉及 chrome API 通信。
 
+### 6.4 模块可测性地图
+
+> 用于判断改动后是否需要补测试。可测性：高=纯逻辑可直接测；中=需 mock 外部依赖；低=强依赖运行时环境。Agent 补测后更新"当前覆盖"列。
+
+| 模块 | 文件 | 可测性 | 当前覆盖 | 优先级 | 说明 |
+|------|------|--------|----------|--------|------|
+| 属性提取 | `inject/extra.ts` | 高 | 无 | P0 | 纯函数，提取 Item 属性，最易测 |
+| 场景树构建 | `inject/sceneTreeBuilder.ts` | 高 | 无 | P0 | 构建 PaperNode 树、节点查找，核心逻辑 |
+| 消息路由 | `inject/messageRouter.ts` | 中 | 无 | P1 | action→handler 分发，可 mock handler |
+| Panel Store | `panel/store/index.ts` | 中 | 无 | P1 | mock `chrome.tabs` 即可测 actions |
+| 覆盖层管理 | `inject/overlayManager.ts` | 中 | 无 | P2 | 高亮边框，需 mock Paper.js Item |
+| 拾取器模式 | `inject/pickerMode.ts` | 中 | 无 | P2 | Canvas 点击 + Scope 切换，需 mock |
+| 爆炸预览 | `inject/explodeMode.ts` | 中 | 无 | P2 | 拖拽手柄控制散开，需 mock |
+| 聚焦模式 | `inject/focusMode.ts` | 中 | 无 | P2 | 子树孤立显示，需 mock |
+| 检测 | `inject/index.ts` | 低 | 无 | P3 | 轮询+MutationObserver，集成测试 |
+| UI 组件 | `panel/components/*` | 中 | 无 | P3 | 需 @testing-library（未引入） |
+| Content Script | `content/index.ts` | 低 | 无 | P3 | chrome API 中继，集成测试 |
+| Background | `background/index.ts` | 低 | 无 | P4 | 空实现 |
+
 ## 7. 关键数据流
 
 ### 7.1 Paper.js 检测与连接
@@ -193,11 +212,12 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-06 | 重构 | 拆分 inject/parse.ts 上帝文件（1227行）为 6 个职责模块 | inject | `parse.ts`, `sceneTreeBuilder.ts`, `overlayManager.ts`, `pickerMode.ts`, `explodeMode.ts`, `focusMode.ts`, `messageRouter.ts` |
 | 2026-07-06 | 文档 | 初始化项目知识库文档 | 文档 | `docs/PROJECT_KNOWLEDGE.md` |
 
 ## 12. 维护约定
 
-本文件由人和 Agent 共同维护，遵循以下规则（已写入 `.trae/rules/project_rules.md`）：
+本文件由开发者和 Agent 共同维护，遵循以下规则（已写入 `.trae/rules/project_rules.md`）：
 
 1. **谁改动谁更新**：每次 Agent 完成会改变项目结构、模块职责、数据流、技术栈、设计决策或技术债务的改动后，必须同步更新本文件对应章节。
 2. **结构性改动入变更表**：对项目有结构性影响的改动（新增模块、重构架构、更换技术栈、关键决策变更），额外在 [近期重要变更](#11-近期重要变更) 追加一行。纯 Bug 修复、样式微调不必入表。
