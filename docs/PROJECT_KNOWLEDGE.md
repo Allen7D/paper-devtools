@@ -227,6 +227,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-06 | 修复 | TreeNode 展开/收拢 icon 在扩展模式下点击无效（Dropdown 的 Trigger 干扰子元素 onClick 事件传播）。改为在行 onClick 中统一通过 `e.target.closest()` 判断点击来源分发，不再依赖 `stopPropagation`。同时覆盖可见性/爆炸 icon。 | panel | `panel/components/TreeNode.tsx` |
 | 2026-07-06 | 修复 | ExtensionBridge 改用 `chrome.devtools.inspectedWindow.tabId` 取被检查标签页，修复 DevTools 面板 "no active tab" 导致无法连接的致命 bug（原 `chrome.tabs.query({currentWindow:true})` 在 DevTools 窗口上下文返回空） | shared | `shared/extensionBridge.ts`, `shared/__tests__/extensionBridge.test.ts` |
 | 2026-07-06 | 新增 | 接入 Playwright E2E 测试，覆盖 devtool-local 端到端交互（连接/场景树/选中/可见性/多Scope/属性） | e2e | `playwright.config.ts`, `e2e/local.spec.ts`, `package.json` |
 | 2026-07-06 | 增强 | devtool-local 支持多 Scope 创建/删除（复用 example 绘图函数，配套 @example alias） | devtool-local | `devtool-local/src/scene.ts`, `devtool-local/vite.config.ts`, `devtool-local/tsconfig.json` |

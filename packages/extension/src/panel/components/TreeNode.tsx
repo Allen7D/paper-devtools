@@ -99,12 +99,29 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
     }
   }, [isSelected, selectedNode?.id]);
 
-  const handleToggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleNodeExpanded(node.id);
-  };
+  const handleSelect = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
 
-  const handleSelect = () => {
+    // 交互式 icon 点击：分别处理，不触发行选中。
+    // 统一在行点击中处理，避免 Dropdown 的 Trigger 在扩展环境下
+    // 干扰子元素 onClick 事件传播（devtool-local 不受影响）。
+    if (target.closest('.expand-icon')) {
+      toggleNodeExpanded(node.id);
+      return;
+    }
+    if (target.closest('.visibility-icon')) {
+      toggleNodeVisibility(node.id);
+      return;
+    }
+    if (target.closest('.explode-icon')) {
+      if (isExplodeActive) {
+        disableExplodeMode();
+      } else {
+        enableExplodeMode(node.id);
+      }
+      return;
+    }
+
     selectNode(node.id);
   };
 
@@ -114,20 +131,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
 
   const handleMouseLeave = () => {
     clearHover();
-  };
-
-  const handleToggleVisibility = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleNodeVisibility(node.id);
-  };
-
-  const handleToggleExplode = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isExplodeActive) {
-      disableExplodeMode();
-    } else {
-      enableExplodeMode(node.id);
-    }
   };
 
   const getTypeClassName = (type: string) => {
@@ -151,7 +154,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
           {node.children.length > 0 ? (
             <span
               className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
-              onClick={handleToggleExpand}
             >
               <CaretRightOutlined />
             </span>
@@ -163,7 +165,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
 
           <span
             className={`visibility-icon ${node.visible ? 'visible' : 'hidden'}`}
-            onClick={handleToggleVisibility}
             title={node.visible ? '点击隐藏' : '点击显示'}
           >
             {node.visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
@@ -180,7 +181,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({ node, level, searchQuery = '
           {node.type === 'Group' && (
             <span
               className={`explode-icon ${isExplodeActive ? 'active' : ''}`}
-              onClick={handleToggleExplode}
               title={isExplodeActive ? '退出组合爆炸' : '启用组合爆炸'}
             >
               <UngroupOutlined />

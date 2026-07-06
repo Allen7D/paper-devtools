@@ -48,6 +48,21 @@
       align-items: center;
       justify-content: center;
       transition: transform 0.2s ease;
+      flex-shrink: 0;
+      pointer-events: auto;
+      position: relative;
+
+      // 扩大点击命中区域到 20×20（视觉不变，解决扩展环境下 icon 点击区域过小）
+      &::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+      }
+
+      // icon 内容不拦截指针事件，确保点击穿透到 expand-icon span
+      .anticon {
+        pointer-events: none;
+      }
       
       &.expanded {
         transform: rotate(90deg);
@@ -69,6 +84,12 @@
       align-items: center;
       justify-content: center;
       transition: color 0.2s ease;
+      flex-shrink: 0;
+      pointer-events: auto;
+
+      .anticon {
+        pointer-events: none;
+      }
 
       &:hover {
         color: #333;
@@ -94,6 +115,12 @@
       justify-content: center;
       color: #ccc;
       transition: color 0.2s ease;
+      flex-shrink: 0;
+      pointer-events: auto;
+
+      .anticon {
+        pointer-events: none;
+      }
 
       &:hover {
         color: #fa8c16;

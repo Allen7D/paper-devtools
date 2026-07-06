@@ -34,8 +34,7 @@ function setupChromeMock(tabId: number | undefined, lastErrorMessage?: string) {
       },
     },
   };
-  // @ts-expect-error 注入全局 chrome mock
-  globalThis.chrome = chromeMock;
+  globalThis.chrome = chromeMock as any;
   return { sendCalls, chromeMock };
 }
 
