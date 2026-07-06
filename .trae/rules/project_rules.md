@@ -25,6 +25,7 @@ pnpm --filter <name> <cmd>  # 单项目操作
 | 子项目 | 路径 | 说明 |
 |--------|------|------|
 | extension | `packages/extension/` | Chrome 扩展（DevTools Panel + Popup + Content Script） |
+| devtool-local | `packages/devtool-local/` | 本地运行版（脱离扩展，LocalBridge 同页面通信，用于开发/测试） |
 | example | `packages/example/` | Paper.js 示例应用（多 Canvas 绘图工具） |
 
 ## 项目架构
@@ -70,6 +71,7 @@ DevTools Panel (React) ──chrome.tabs.sendMessage──▶ Content Script ─
 | Inject (聚焦) | `packages/extension/src/inject/focusMode.ts` | 聚焦模式 |
 | Inject (消息路由) | `packages/extension/src/inject/messageRouter.ts` | DevTools 消息分发 |
 | Inject (属性提取) | `packages/extension/src/inject/extra.ts` | 属性提取函数 |
+| Inject (初始化) | `packages/extension/src/inject/setup.ts` | initInject()：__PAPER_SCOPES__ 初始化 + 轮询 + Observer |
 | 通信桥接接口 | `packages/extension/src/shared/bridge.ts` | Bridge 接口 + setBridge/getBridge 依赖注入 |
 | 扩展桥接实现 | `packages/extension/src/shared/extensionBridge.ts` | ExtensionBridge：封装 chrome.tabs.sendMessage + onMessage |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
@@ -78,6 +80,8 @@ DevTools Panel (React) ──chrome.tabs.sendMessage──▶ Content Script ─
 | Inject 构建 | `packages/extension/vite.inject.config.ts` | 注入脚本独立构建（IIFE 格式） |
 | 示例入口 | `packages/example/src/index.ts` | 多 Canvas + PaperScope 管理 |
 | 示例绘图 | `packages/example/src/draw.ts` | 绘图函数 createShapes |
+| Local 入口 | `packages/devtool-local/src/main.tsx` | 本地运行版入口（Paper.js 场景 + Panel UI + LocalBridge） |
+| Local 桥接 | `packages/devtool-local/src/localBridge.ts` | LocalBridge：同页面 CustomEvent 通信 |
 
 ### 组件树
 

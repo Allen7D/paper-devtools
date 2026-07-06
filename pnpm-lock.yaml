@@ -91,6 +91,27 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@24.1.0)(less@4.4.0)(terser@5.43.1)
 
+  packages/devtool-local:
+    dependencies:
+      '@ant-design/icons':
+        specifier: ^6.0.0
+        version: 6.2.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      antd:
+        specifier: ^6.4.4
+        version: 6.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      paper:
+        specifier: ^0.12.18
+        version: 0.12.18
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.1.0(react@19.1.0)
+      zustand:
+        specifier: ^5.0.6
+        version: 5.0.6(@types/react@19.1.8)(immer@9.0.21)(react@19.1.0)
+
   packages/example:
     dependencies:
       paper:
@@ -144,10 +165,6 @@ packages:
     peerDependencies:
       react: '>=16.0.0'
       react-dom: '>=16.0.0'
-
-  '@ant-design/fast-color@3.0.0':
-    resolution: {integrity: sha512-eqvpP7xEDm2S7dUzl5srEQCBTXZMmY3ekf97zI+M2DHOYyKdJGH0qua0JACHTqbkRnD/KHFQP9J1uMJ/XWVzzA==}
-    engines: {node: '>=8.x'}
 
   '@ant-design/fast-color@3.0.1':
     resolution: {integrity: sha512-esKJegpW4nckh0o6kV3Tkb7NPIZYbPnnFxmQDUmL08ukXZAvV85TZBr70eGuke/CIArLaP6aw8lt9KILjnWuOw==}
@@ -3013,7 +3030,7 @@ snapshots:
 
   '@ant-design/colors@8.0.0':
     dependencies:
-      '@ant-design/fast-color': 3.0.0
+      '@ant-design/fast-color': 3.0.1
 
   '@ant-design/colors@8.0.1':
     dependencies:
@@ -3038,8 +3055,6 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       stylis: 4.3.6
-
-  '@ant-design/fast-color@3.0.0': {}
 
   '@ant-design/fast-color@3.0.1': {}
 

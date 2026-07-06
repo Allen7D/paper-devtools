@@ -35,10 +35,12 @@ paper-devtools/
 │   │   │   ├── devtools/   # DevTools 面板注册
 │   │   │   ├── panel/      # React 面板（UI + store）
 │   │   │   ├── inject/     # 注入页面上下文的脚本（检测 + 解析）
+│   │   │   ├── shared/     # 跨上下文共享（Bridge 接口 + 常量）
 │   │   │   └── background/ # Service Worker（骨架）
 │   │   ├── manifest.config.ts
 │   │   ├── vite.config.ts
 │   │   └── vite.inject.config.ts
+│   ├── devtool-local/      # 本地运行版（脱离扩展，同页面跑 Paper.js + Panel UI）
 │   └── example/            # Paper.js 示例应用（用于自测）
 ├── docs/                   # 项目文档
 │   └── PROJECT_KNOWLEDGE.md
@@ -50,6 +52,7 @@ paper-devtools/
 | 子项目 | 路径 | 说明 |
 |--------|------|------|
 | extension | `packages/extension/` | Chrome 扩展（DevTools Panel + Popup + Content Script） |
+| devtool-local | `packages/devtool-local/` | 本地运行版（脱离扩展，LocalBridge 同页面通信，用于开发/测试） |
 | example | `packages/example/` | Paper.js 示例应用（多 Canvas 绘图工具） |
 
 ## 4. 整体架构
@@ -117,6 +120,7 @@ Paper.js 中每个 `PaperScope` 对应一个独立的项目上下文（通常绑
 | Inject (聚焦) | `packages/extension/src/inject/focusMode.ts` | 聚焦模式（隐藏祖先兄弟，孤立显示子树） |
 | Inject (消息路由) | `packages/extension/src/inject/messageRouter.ts` | DevTools 消息分发（action → handler switch） |
 | Inject (属性提取) | `packages/extension/src/inject/extra.ts` | 属性提取函数 |
+| Inject (初始化) | `packages/extension/src/inject/setup.ts` | initInject()：__PAPER_SCOPES__ 初始化 + 轮询 + Observer（供 index.ts 和 devtool-local 复用） |
 | 通信桥接接口 | `packages/extension/src/shared/bridge.ts` | Bridge 接口 + setBridge/getBridge 依赖注入 |
 | 扩展桥接实现 | `packages/extension/src/shared/extensionBridge.ts` | ExtensionBridge：封装 chrome.tabs.sendMessage + onMessage |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
@@ -125,6 +129,8 @@ Paper.js 中每个 `PaperScope` 对应一个独立的项目上下文（通常绑
 | Inject 构建 | `packages/extension/vite.inject.config.ts` | 注入脚本独立构建（IIFE 格式） |
 | 示例入口 | `packages/example/src/index.ts` | 多 Canvas + PaperScope 管理 |
 | 示例绘图 | `packages/example/src/draw.ts` | 绘图函数 createShapes |
+| Local 入口 | `packages/devtool-local/src/main.tsx` | 本地运行版入口（Paper.js 场景 + Panel UI + LocalBridge） |
+| Local 桥接 | `packages/devtool-local/src/localBridge.ts` | LocalBridge：同页面 CustomEvent 通信 |
 
 ### 6.2 前端组件树
 
@@ -221,6 +227,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-06 | 新增 | devtool-local 包：脱离 Chrome 扩展的本地运行版本（LocalBridge 同页面通信，复用 Panel UI + Inject 逻辑） | devtool-local, inject | `devtool-local/`, `inject/setup.ts`, `inject/index.ts` |
 | 2026-07-06 | 重构 | 引入 Bridge 通信抽象层，Panel Store 解耦 chrome API（阶段1，为 devtool-local 铺路） | shared, panel | `shared/bridge.ts`, `shared/extensionBridge.ts`, `panel/store/index.ts`, `panel/index.tsx`, `hooks/useDevToolsCleanup.ts` |
 | 2026-07-06 | 重构 | 拆分 inject/parse.ts 上帝文件（1227行）为 6 个职责模块 | inject | `parse.ts`, `sceneTreeBuilder.ts`, `overlayManager.ts`, `pickerMode.ts`, `explodeMode.ts`, `focusMode.ts`, `messageRouter.ts` |
 | 2026-07-06 | 文档 | 初始化项目知识库文档 | 文档 | `docs/PROJECT_KNOWLEDGE.md` |

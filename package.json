@@ -11,6 +11,8 @@
     "dev:example": "pnpm --filter @devtool/example dev",
     "build:example": "pnpm --filter @devtool/example build",
     "preview:example": "pnpm --filter @devtool/example preview",
+    "dev:local": "pnpm --filter @devtool/local dev",
+    "build:local": "pnpm --filter @devtool/local build",
     "lint:example": "pnpm --filter @devtool/example lint",
     "dev:all": "pnpm -r --parallel dev",
     "build:all": "pnpm -r build"
