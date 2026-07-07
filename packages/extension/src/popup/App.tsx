@@ -11,6 +11,7 @@ import {
   SearchOutlined,
   ClearOutlined,
   CopyOutlined,
+  SwapOutlined,
 } from '@ant-design/icons'
 import './App.css'
 
@@ -81,6 +82,19 @@ async function clearStorage(tabId: number): Promise<void> {
     target: { tabId },
     func: () => localStorage.clear(),
   })
+}
+
+/** 可一键切换的值对（off → on） */
+const TOGGLE_PAIRS: Record<string, { off: string; on: string }> = {
+  true: { off: 'false', on: 'true' },
+  false: { off: 'false', on: 'true' },
+  'zh-CN': { off: 'zh-CN', on: 'en-US' },
+  'en-US': { off: 'zh-CN', on: 'en-US' },
+}
+
+/** 判断值是否可一键切换，返回切换对或 null */
+function getTogglePair(value: string): { off: string; on: string } | null {
+  return TOGGLE_PAIRS[value] ?? null
 }
 
 export default function App() {
@@ -190,6 +204,18 @@ export default function App() {
     }
   }
 
+  const handleToggle = async (key: string, newValue: string) => {
+    try {
+      const tab = await getActiveTab()
+      if (!tab?.id) return
+      await setStorageItem(tab.id, key, newValue)
+      setItems((prev) => prev.map((item) => (item.key === key ? { ...item, value: newValue } : item)))
+      message.success('已切换')
+    } catch (err) {
+      message.error('切换失败：' + (err as Error).message)
+    }
+  }
+
   const startEdit = (key: string, value: string) => {
     setEditingKey(key)
     setEditingValue(value)
@@ -237,6 +263,24 @@ export default function App() {
               autoSize={{ minRows: 1, maxRows: 6 }}
               size="small"
             />
+          )
+        }
+        const pair = getTogglePair(text)
+        if (pair) {
+          const targetValue = text === pair.on ? pair.off : pair.on
+          return (
+            <Space size="small" style={{ width: '100%' }}>
+              <Text type="secondary" ellipsis={{ tooltip: text }} style={{ fontSize: 12, flex: 1, minWidth: 0 }}>
+                {text}
+              </Text>
+              <Button
+                size="small"
+                type="text"
+                icon={<SwapOutlined />}
+                title={`切换为 ${targetValue}`}
+                onClick={() => handleToggle(record.key, targetValue)}
+              />
+            </Space>
           )
         }
         return (
