@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import { QuestionCircleOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import type { Color } from 'antd/es/color-picker';
+import { JsonViewer } from '@textea/json-viewer';
 import { usePaperStore } from '../store';
 import { useThrottledCallback } from '../hooks/useThrottledCallback';
 import { getAncestorChain } from '../utils/navigation';
@@ -505,9 +506,10 @@ export const PropertiesPanel: React.FC = () => {
     );
   }
 
-  // 获取所有要显示的属性
+  // 获取所有要显示的属性（data 单独分离，用 JsonViewer 只读展示）
   const properties = selectedNode.properties || {};
-  const propertyEntries = Object.entries(properties);
+  const { data, ...otherProperties } = properties;
+  const propertyEntries = Object.entries(otherProperties);
 
   return (
     <div className="properties-panel">
@@ -620,6 +622,32 @@ export const PropertiesPanel: React.FC = () => {
             </div>
           )}
         </Card>
+
+        {/* 原始数据（data）展示区域 */}
+        {data && (
+          <Card
+            size="small"
+            style={{ marginTop: 16 }}
+            title={
+              <Space>
+                <Text strong>原始数据</Text>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  (data)
+                </Text>
+              </Space>
+            }
+          >
+            <JsonViewer
+              value={data}
+              rootName={false}
+              theme="light"
+              editable={false}
+              enableClipboard
+              defaultInspectDepth={2}
+              indentWidth={2}
+            />
+          </Card>
+        )}
       </div>
     </div>
   );

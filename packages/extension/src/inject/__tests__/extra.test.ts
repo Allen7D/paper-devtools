@@ -133,3 +133,64 @@ describe('extractItemProperties - 字段提取', () => {
     expect(props.strokeWidth).toBeUndefined();
   });
 });
+
+describe('extractItemProperties - data 字段提取', () => {
+  it('提取 data 对象中的用户字段', () => {
+    const item = {
+      data: { uuid: 'abc', paperId: 1591, visible: true },
+    };
+    const props = extractItemProperties(item as any);
+    expect(props.data).toEqual({ uuid: 'abc', paperId: 1591, visible: true });
+  });
+
+  it('过滤以 __ 开头的内部字段', () => {
+    const item = {
+      data: { uuid: 'abc', __explodeOrigin__: { x: 0, y: 0 }, __internal__: true },
+    };
+    const props = extractItemProperties(item as any);
+    expect(props.data).toEqual({ uuid: 'abc' });
+  });
+
+  it('data 为空对象时不输出 data 字段', () => {
+    const item = { data: {} };
+    const props = extractItemProperties(item as any);
+    expect(props.data).toBeUndefined();
+  });
+
+  it('data 仅含内部字段时不输出 data 字段', () => {
+    const item = { data: { __explodeOrigin__: { x: 1 } } };
+    const props = extractItemProperties(item as any);
+    expect(props.data).toBeUndefined();
+  });
+
+  it('data 为 null/undefined/非对象时不输出 data 字段', () => {
+    expect(extractItemProperties({ data: null } as any).data).toBeUndefined();
+    expect(extractItemProperties({ data: undefined } as any).data).toBeUndefined();
+    expect(extractItemProperties({ data: 'string' } as any).data).toBeUndefined();
+    expect(extractItemProperties({ data: [1, 2] } as any).data).toBeUndefined();
+  });
+
+  it('data 含嵌套对象时正确序列化', () => {
+    const item = {
+      data: {
+        style: { bgColor: '#ff0000', opacity: 0.5 },
+        shape: { hybrid: true, hybridItems: [{ uuid: 'item1' }, { uuid: 'item2' }] },
+      },
+    };
+    const props = extractItemProperties(item as any);
+    expect(props.data).toEqual({
+      style: { bgColor: '#ff0000', opacity: 0.5 },
+      shape: { hybrid: true, hybridItems: [{ uuid: 'item1' }, { uuid: 'item2' }] },
+    });
+  });
+
+  it('data 含循环引用时不崩溃', () => {
+    const data: any = { uuid: 'abc' };
+    data.self = data;
+    const item = { data };
+    const props = extractItemProperties(item as any);
+    // 循环引用时 JSON.stringify 抛错，fallback 返回原始过滤对象
+    expect(props.data).toBeDefined();
+    expect(props.data!.uuid).toBe('abc');
+  });
+});

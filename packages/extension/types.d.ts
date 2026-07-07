@@ -10,6 +10,8 @@ export interface NodeItemPropertie {
   opacity?: number;
   closed?: boolean;
   type?: string;
+  /** 图元的自定义 data（原始属性记录），已过滤内部字段 */
+  data?: Record<string, any>;
 }
 
 export interface NodeProjectPropertie {

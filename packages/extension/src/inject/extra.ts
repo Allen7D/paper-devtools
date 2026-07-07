@@ -44,6 +44,32 @@ function colorToCssWithAlpha(color: paper.Color): string {
 }
 
 /**
+ * 安全提取 paper.js 图元的 data 字段。
+ *
+ * `item.data` 是用户存储在图元上的自定义数据（原始属性记录）。
+ * 过滤以 `__` 开头的内部字段（如 `__explodeOrigin__`），并通过
+ * JSON 序列化去除不可传输的值（函数、Symbol 等），防止循环引用报错。
+ */
+function extractItemData(data: any): Record<string, any> | undefined {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return undefined;
+
+  const filtered: Record<string, any> = {};
+  for (const key of Object.keys(data)) {
+    if (key.startsWith('__')) continue;
+    filtered[key] = data[key];
+  }
+
+  if (Object.keys(filtered).length === 0) return undefined;
+
+  try {
+    return JSON.parse(JSON.stringify(filtered));
+  } catch {
+    // 序列化失败（循环引用等），返回原始过滤对象
+    return filtered;
+  }
+}
+
+/**
  * 提取 paper.js 图元的属性。
  *
  * 从 Item 实例中提取位置、边界框、填充颜色、描边颜色、描边宽度、
@@ -96,6 +122,12 @@ export function extractItemProperties(item: paper.Item): NodeItemPropertie {
   // 闭合状态
   if ('closed' in item && item.closed != null) {
     properties.closed = item.closed as boolean;
+  }
+
+  // 自定义 data（原始属性记录）
+  const data = extractItemData((item as any).data);
+  if (data) {
+    properties.data = data;
   }
 
   return properties;
