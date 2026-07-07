@@ -124,6 +124,7 @@ Paper.js 中每个 `PaperScope` 对应一个独立的项目上下文（通常绑
 | 通信桥接接口 | `packages/extension/src/shared/bridge.ts` | Bridge 接口 + setBridge/getBridge 依赖注入 |
 | 扩展桥接实现 | `packages/extension/src/shared/extensionBridge.ts` | ExtensionBridge：通过 `chrome.devtools.inspectedWindow.tabId` 取被检查标签页，封装 `chrome.tabs.sendMessage` + `onMessage`（不可用 `chrome.tabs.query({currentWindow:true})`，DevTools 窗口无活动标签页） |
 | Background | `packages/extension/src/background/index.ts` | 骨架代码，仅监听安装事件 |
+| Popup | `packages/extension/src/popup/App.tsx` | 扩展弹出页：查看/编辑/新增/删除当前页面 localStorage（通过 `chrome.scripting.executeScript` 直接操作页面，不走 Content Script 中继） |
 | MV3 清单 | `packages/extension/manifest.config.ts` | CRXJS defineManifest |
 | Vite 配置 | `packages/extension/vite.config.ts` | 主构建配置 |
 | Inject 构建 | `packages/extension/vite.inject.config.ts` | 注入脚本独立构建（IIFE 格式） |
@@ -227,6 +228,7 @@ Panel 中编辑属性 → `updateNodeProperty` action → `chrome.tabs.sendMessa
 
 | 日期 | 类型 | 摘要 | 涉及模块 | 关联文件 |
 |------|------|------|----------|----------|
+| 2026-07-07 | 新增 | Popup 从占位页改为功能性 localStorage 查看器/编辑器：支持读取、搜索、内联编辑、新增、删除、清空、复制当前页面 localStorage。使用 `chrome.scripting.executeScript`（依赖 `scripting` + `activeTab` 权限）直接操作页面，不经过 Content Script 中继 | popup | `popup/App.tsx`, `popup/App.css`, `popup/main.tsx`, `popup/index.css` |
 | 2026-07-06 | 修复 | TreeNode 展开/收拢 icon 在扩展模式下点击无效（Dropdown 的 Trigger 干扰子元素 onClick 事件传播）。改为在行 onClick 中统一通过 `e.target.closest()` 判断点击来源分发，不再依赖 `stopPropagation`。同时覆盖可见性/爆炸 icon。 | panel | `panel/components/TreeNode.tsx` |
 | 2026-07-06 | 修复 | ExtensionBridge 改用 `chrome.devtools.inspectedWindow.tabId` 取被检查标签页，修复 DevTools 面板 "no active tab" 导致无法连接的致命 bug（原 `chrome.tabs.query({currentWindow:true})` 在 DevTools 窗口上下文返回空） | shared | `shared/extensionBridge.ts`, `shared/__tests__/extensionBridge.test.ts` |
 | 2026-07-06 | 新增 | 接入 Playwright E2E 测试，覆盖 devtool-local 端到端交互（连接/场景树/选中/可见性/多Scope/属性） | e2e | `playwright.config.ts`, `e2e/local.spec.ts`, `package.json` |
