@@ -173,16 +173,7 @@ export const SceneTreeView: React.FC = () => {
       case 'ArrowRight': {
         e.preventDefault();
         if (!currentId || !filteredTree) return;
-        // 在 filteredTree 中查找当前节点
-        const findNode = (node: PaperNode, id: string): PaperNode | null => {
-          if (node.id === id) return node;
-          for (const child of node.children) {
-            const found = findNode(child, id);
-            if (found) return found;
-          }
-          return null;
-        };
-        const currentNode = findNode(filteredTree, currentId);
+        const currentNode = findNodeInTree(filteredTree, currentId);
         if (!currentNode) return;
         if (currentNode.children.length === 0) return; // 无子节点
         // 已折叠则展开

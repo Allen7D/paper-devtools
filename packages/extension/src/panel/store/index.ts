@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { HIGHLIGHT_TYPE, PANEL_ACTION, RUNTIME_ACTION } from '@/shared/constants';
 import { getBridge } from '@/shared/bridge';
+import { findNodeInTree } from '../utils/navigation';
 
 /**
  * 将指定节点的祖先链加入 `expandedNodes` 集合，确保该节点在场景树中可见。
@@ -20,22 +21,6 @@ function expandAncestorChain(
     expandedNodes.add(parts.slice(0, i + 1).join('_'));
   }
   expandedNodes.add('root');
-}
-
-/**
- * 在场景树中深度优先查找指定 ID 的节点。
- *
- * @param node - 子树根节点
- * @param id - 目标节点 ID
- * @returns 匹配的节点，未找到返回 `null`
- */
-function findNodeInTree(node: PaperNode, id: string): PaperNode | null {
-  if (node.id === id) return node;
-  for (const child of node.children) {
-    const found = findNodeInTree(child, id);
-    if (found) return found;
-  }
-  return null;
 }
 
 /**

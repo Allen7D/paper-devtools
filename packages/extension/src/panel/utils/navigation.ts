@@ -65,3 +65,19 @@ export function getVisibleNodeIds(
   walk(node);
   return result;
 }
+
+/**
+ * 在场景树中深度优先查找指定 ID 的节点。
+ *
+ * @param node - 子树根节点
+ * @param id - 目标节点 ID
+ * @returns 匹配的节点，未找到返回 `null`
+ */
+export function findNodeInTree(node: PaperNode, id: string): PaperNode | null {
+  if (node.id === id) return node;
+  for (const child of node.children) {
+    const found = findNodeInTree(child, id);
+    if (found) return found;
+  }
+  return null;
+}
